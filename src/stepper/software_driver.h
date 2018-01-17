@@ -22,8 +22,8 @@ typedef struct {
 } StepState;
 
 
-void attachStepper(unsigned char stepperId, enum StepperMode mode);
-StepState getStepperState(unsigned char stepperId);
+StepState* attachStepper(unsigned char stepperId, enum StepperMode mode);
+StepState* getStepperState(unsigned char stepperId);
 
 void makeStep(unsigned char stepperId);
 void setDirection(unsigned char stepperId, enum StepperDirection direction);

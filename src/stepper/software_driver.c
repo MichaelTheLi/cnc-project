@@ -32,9 +32,9 @@ unsigned char stepsHalf[] = {
     0b0010,
 };
 
-void attachStepper(unsigned char stepperId, enum StepperMode mode) {
+StepState* attachStepper(unsigned char stepperId, enum StepperMode mode) {
     if (stepperId >= MAX_STEPPERS) {
-        return;
+        return NULL;
     }
 
      StepState state = {
@@ -62,33 +62,38 @@ void attachStepper(unsigned char stepperId, enum StepperMode mode) {
     state.attachMode = ATTACHED;
 
     stepperStates[stepperId] = state;
+
+    return &stepperStates[stepperId];
 }
 
-StepState getStepperState(unsigned char stepperId) {
+StepState* getStepperState(unsigned char stepperId) {
     if (stepperId >= MAX_STEPPERS) {
-        StepState defaultState = {
-            FULL_STEP_SINGLE_PHASE,
-            0,
-            0UL,
-            CW,
-            4,
-            {0},
-            DETACHED
-        };
-        return defaultState;
+        return NULL;
     }
 
-    return stepperStates[stepperId];
+    return &stepperStates[stepperId];
 }
 
 unsigned char getPinsValues(unsigned char stepperId) {
-    StepState state = getStepperState(stepperId);
+    StepState* statePtr = getStepperState(stepperId);
+
+    if (!statePtr) {
+        return NULL;
+    }
+
+    StepState state = *statePtr;
 
     return state.phases[state.phase];
 }
 
 void makeStep(unsigned char stepperId) {
-    StepState state = getStepperState(stepperId);
+    StepState* statePtr = getStepperState(stepperId);
+
+    if (!statePtr) {
+        return;
+    }
+
+    StepState state = *statePtr;
 
     int phase = state.phase;
 
@@ -105,7 +110,7 @@ void makeStep(unsigned char stepperId) {
     }
 
     state.phase = (unsigned int) phase;
-    stepperStates[stepperId] = state; // TODO Is it necessary?
+    stepperStates[stepperId] = state;
 }
 
 void setDirection(unsigned char stepperId, enum StepperDirection direction) {

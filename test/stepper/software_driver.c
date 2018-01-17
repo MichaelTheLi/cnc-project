@@ -9,30 +9,55 @@
 #include <stepper/software_driver.h>
 #include "./software_driver.h"
 
-START_TEST (test_state_initialized)
+START_TEST (test_state_attach_returns)
 {
-    attachStepper(0, FULL_STEP_SINGLE_PHASE);
+    StepState* statePtr = attachStepper(0, FULL_STEP_SINGLE_PHASE);
 
-    StepState state = getStepperState(0);
-
-    ck_assert_msg(state.attachMode == ATTACHED, "Should be attached");
+    ck_assert_ptr_nonnull(statePtr);
 }
 END_TEST
 
-START_TEST (test_state_not_initialized_if_stepper_id_too_big)
-{
-    attachStepper(123, FULL_STEP_SINGLE_PHASE);
+START_TEST (test_state_attached_has_correct_state)
+    {
+        StepState state = *attachStepper(0, FULL_STEP_SINGLE_PHASE);
 
-    StepState state = getStepperState(123);
-    ck_assert_msg(state.attachMode == DETACHED, "Should not be attached");
+        ck_assert_msg(state.attachMode == ATTACHED, "Should be attached");
+    }
+END_TEST
+
+START_TEST (test_state_attachStepper_null_if_stepper_id_too_big)
+{
+    StepState* statePtr = attachStepper(123, FULL_STEP_SINGLE_PHASE);
+
+    ck_assert_ptr_null(statePtr);
 }
+END_TEST
+
+START_TEST (test_state_getStepperState)
+    {
+        StepState* statePtr = getStepperState(0);
+
+        ck_assert_ptr_nonnull(statePtr);
+
+        StepState state = *statePtr;
+
+        ck_assert_msg(state.attachMode == ATTACHED, "Should be attached");
+    }
+END_TEST
+
+START_TEST (test_state_getStepperState_if_stepper_id_too_big)
+    {
+        StepState* statePtr = getStepperState(123);
+
+        ck_assert_ptr_null(statePtr);
+    }
 END_TEST
 
 START_TEST (test_state_initialized_properly)
 {
     attachStepper(1, FULL_STEP_SINGLE_PHASE);
 
-    StepState state = getStepperState(1);
+    StepState state = *getStepperState(1);
 
     ck_assert(state.direction == CW);
     ck_assert(state.phase == 0);
@@ -43,7 +68,7 @@ START_TEST (test_state_initialized_properly)
 
     attachStepper(2, HALF_STEP);
 
-    StepState state2 = getStepperState(2);
+    StepState state2 = *getStepperState(2);
 
     ck_assert(state2.direction == CW);
     ck_assert(state2.phase == 0);
@@ -56,12 +81,12 @@ END_TEST
 
 START_TEST (test_state_direction_changed_correctly)
 {
-    StepState state = getStepperState(1);
+    StepState state = *getStepperState(1);
 
     ck_assert(state.direction == CW);
 
     setDirection(1, CCW);
-    StepState state2 = getStepperState(1);
+    StepState state2 = *getStepperState(1);
 
     ck_assert(state2.direction == CCW);
 }
@@ -73,23 +98,23 @@ START_TEST (test_state_make_step_changes_state_correctly)
     attachStepper(stepperId, FULL_STEP_SINGLE_PHASE);
 
     makeStep(stepperId);
-    StepState state = getStepperState(stepperId);
+    StepState state = *getStepperState(stepperId);
     ck_assert(state.phase == 1);
 
     makeStep(stepperId);
-    StepState state1 = getStepperState(stepperId);
+    StepState state1 = *getStepperState(stepperId);
     ck_assert(state1.phase == 2);
 
     makeStep(stepperId);
-    StepState state2 = getStepperState(stepperId);
+    StepState state2 = *getStepperState(stepperId);
     ck_assert(state2.phase == 3);
 
     makeStep(stepperId);
-    StepState state3 = getStepperState(stepperId);
+    StepState state3 = *getStepperState(stepperId);
     ck_assert(state3.phase == 0);
 
     makeStep(stepperId);
-    StepState state4 = getStepperState(stepperId);
+    StepState state4 = *getStepperState(stepperId);
     ck_assert(state4.phase == 1);
 }
 END_TEST
@@ -101,51 +126,23 @@ START_TEST (test_state_make_step_changes_state_correctly_in_CCW)
     setDirection(stepperId, CCW);
 
     makeStep(stepperId);
-    StepState state = getStepperState(stepperId);
+    StepState state = *getStepperState(stepperId);
     ck_assert_uint_eq(state.phase, 3);
 
     makeStep(stepperId);
-    StepState state1 = getStepperState(stepperId);
+    StepState state1 = *getStepperState(stepperId);
     ck_assert_uint_eq(state1.phase, 2);
 
     makeStep(stepperId);
-    StepState state2 = getStepperState(stepperId);
+    StepState state2 = *getStepperState(stepperId);
     ck_assert_uint_eq(state2.phase, 1);
 
     makeStep(stepperId);
-    StepState state3 = getStepperState(stepperId);
+    StepState state3 = *getStepperState(stepperId);
     ck_assert_uint_eq(state3.phase, 0);
 
     makeStep(stepperId);
-    StepState state4 = getStepperState(stepperId);
-    ck_assert_uint_eq(state4.phase, 3);
-}
-END_TEST
-
-START_TEST (test_state_make_step_)
-{
-    unsigned char stepperId = 4;
-    attachStepper(stepperId, FULL_STEP_SINGLE_PHASE);
-    setDirection(stepperId, CCW);
-
-    makeStep(stepperId);
-    StepState state = getStepperState(stepperId);
-    ck_assert_uint_eq(state.phase, 3);
-
-    makeStep(stepperId);
-    StepState state1 = getStepperState(stepperId);
-    ck_assert_uint_eq(state1.phase, 2);
-
-    makeStep(stepperId);
-    StepState state2 = getStepperState(stepperId);
-    ck_assert_uint_eq(state2.phase, 1);
-
-    makeStep(stepperId);
-    StepState state3 = getStepperState(stepperId);
-    ck_assert_uint_eq(state3.phase, 0);
-
-    makeStep(stepperId);
-    StepState state4 = getStepperState(stepperId);
+    StepState state4 = *getStepperState(stepperId);
     ck_assert_uint_eq(state4.phase, 3);
 }
 END_TEST
@@ -188,11 +185,17 @@ START_TEST (test_state_get_pins_works)
 END_TEST
 
 void fillSuite_stepper_software_driver(Suite* suite) {
-    TCase *tcase = tcase_create("attachStepper'n'getStepperState");
-    tcase_add_test(tcase, test_state_initialized);
-    tcase_add_test(tcase, test_state_not_initialized_if_stepper_id_too_big);
+    TCase *tcase = tcase_create("attachStepper");
+    tcase_add_test(tcase, test_state_attach_returns);
+    tcase_add_test(tcase, test_state_attached_has_correct_state);
+    tcase_add_test(tcase, test_state_attachStepper_null_if_stepper_id_too_big);
     tcase_add_test(tcase, test_state_initialized_properly);
     suite_add_tcase(suite, tcase);
+
+    TCase *tcase_getStepperState = tcase_create("getStepperState");
+    tcase_add_test(tcase_getStepperState, test_state_getStepperState_if_stepper_id_too_big);
+    tcase_add_test(tcase_getStepperState, test_state_getStepperState);
+    suite_add_tcase(suite, tcase_getStepperState);
 
     TCase *tcase2 = tcase_create("setDirection");
     tcase_add_test(tcase2, test_state_direction_changed_correctly);
