@@ -4,7 +4,6 @@
 
 #include "./parser.h"
 #include "gcode/parser.h"
-#include "stdio.h"
 
 START_TEST (test_parser_reads_int_letter)
 {
@@ -54,7 +53,7 @@ START_TEST (test_parser_reads_float_letter_exceed_tolerance)
     }
 END_TEST
 
-START_TEST (test_parser_can_process_comments)
+START_TEST (test_parser_can_process_brackets_comments)
     {
         // Should not be processed. Also, should not break other letters
         char *inputString = "N1 G02 X2.1234 Y0.2 (comment here)";
@@ -64,9 +63,91 @@ START_TEST (test_parser_can_process_comments)
         GCodeCommand command = *commandPtr;
 
         ck_assert_float_eq(command[COMMAND_INDEX('N')], 1);
+        command[COMMAND_INDEX('N')] = NAN;
         ck_assert_float_eq(command[COMMAND_INDEX('G')], 2);
+        command[COMMAND_INDEX('G')] = NAN;
         ck_assert_float_eq(command[COMMAND_INDEX('X')], 2.1234);
+        command[COMMAND_INDEX('X')] = NAN;
         ck_assert_float_eq(command[COMMAND_INDEX('Y')], 0.2);
+        command[COMMAND_INDEX('Y')] = NAN;
+
+        for (int i = 0; i < COMMAND_SIZE; ++i) {
+            ck_assert_float_nan(command[i]);
+        }
+    }
+END_TEST
+
+START_TEST (test_parser_can_process_brackets_comments_in_the_middle)
+    {
+        // Should not be processed. Also, should not break other letters
+        char *inputString = "N1 G02 (comment with command -> G21 here) X2.1234 Y0.2 ";
+        GCodeCommand *commandPtr = createCommand();
+        parseString(inputString, commandPtr);
+
+        GCodeCommand command = *commandPtr;
+
+        ck_assert_float_eq(command[COMMAND_INDEX('N')], 1);
+        command[COMMAND_INDEX('N')] = NAN;
+        ck_assert_float_eq(command[COMMAND_INDEX('G')], 2);
+        command[COMMAND_INDEX('G')] = NAN;
+        ck_assert_float_eq(command[COMMAND_INDEX('X')], 2.1234);
+        command[COMMAND_INDEX('X')] = NAN;
+        ck_assert_float_eq(command[COMMAND_INDEX('Y')], 0.2);
+        command[COMMAND_INDEX('Y')] = NAN;
+
+        for (int i = 0; i < COMMAND_SIZE; ++i) {
+            ck_assert_float_nan(command[i]);
+        }
+    }
+END_TEST
+
+START_TEST (test_parser_can_process_semicolon_comments)
+    {
+        // Should not be processed. Also, should not break other letters
+        char *inputString = "N1 G02 X2.1234 Y0.2 ;comment here";
+        GCodeCommand *commandPtr = createCommand();
+        parseString(inputString, commandPtr);
+
+        GCodeCommand command = *commandPtr;
+
+        ck_assert_float_eq(command[COMMAND_INDEX('N')], 1);
+        command[COMMAND_INDEX('N')] = NAN;
+        ck_assert_float_eq(command[COMMAND_INDEX('G')], 2);
+        command[COMMAND_INDEX('G')] = NAN;
+        ck_assert_float_eq(command[COMMAND_INDEX('X')], 2.1234);
+        command[COMMAND_INDEX('X')] = NAN;
+        ck_assert_float_eq(command[COMMAND_INDEX('Y')], 0.2);
+        command[COMMAND_INDEX('Y')] = NAN;
+
+        for (int i = 0; i < COMMAND_SIZE; ++i) {
+            ck_assert_float_nan(command[i]);
+        }
+    }
+END_TEST
+
+START_TEST (test_parser_should_process_empty_letters)
+    {
+        // Should not be processed. Also, should not break other letters
+        char *inputString = "N1 G02 X2.1234 Y0.2 M";
+        GCodeCommand *commandPtr = createCommand();
+        parseString(inputString, commandPtr);
+
+        GCodeCommand command = *commandPtr;
+
+        ck_assert_float_eq(command[COMMAND_INDEX('N')], 1);
+        command[COMMAND_INDEX('N')] = NAN;
+        ck_assert_float_eq(command[COMMAND_INDEX('G')], 2);
+        command[COMMAND_INDEX('G')] = NAN;
+        ck_assert_float_eq(command[COMMAND_INDEX('X')], 2.1234);
+        command[COMMAND_INDEX('X')] = NAN;
+        ck_assert_float_eq(command[COMMAND_INDEX('Y')], 0.2);
+        command[COMMAND_INDEX('Y')] = NAN;
+        ck_assert_float_eq(command[COMMAND_INDEX('M')], 0.0);
+        command[COMMAND_INDEX('M')] = NAN;
+
+        for (int i = 0; i < COMMAND_SIZE; ++i) {
+            ck_assert_float_nan(command[i]);
+        }
     }
 END_TEST
 
@@ -76,6 +157,9 @@ void fillSuite_gcode_parser(Suite* suite) {
     tcase_add_test(tcase, test_parser_reads_int_letter);
     tcase_add_test(tcase, test_parser_reads_float_letter);
     tcase_add_test(tcase, test_parser_reads_float_letter_exceed_tolerance);
-    tcase_add_test(tcase, test_parser_can_process_comments);
+    tcase_add_test(tcase, test_parser_can_process_brackets_comments);
+    tcase_add_test(tcase, test_parser_can_process_brackets_comments_in_the_middle);
+    tcase_add_test(tcase, test_parser_can_process_semicolon_comments);
+    tcase_add_test(tcase, test_parser_should_process_empty_letters);
     suite_add_tcase(suite, tcase);
 }

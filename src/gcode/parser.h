@@ -10,7 +10,7 @@
 typedef float *GCodeCommand;
 
 #define COMMAND_INDEX(X) ((X) - 'A')
-#define CHAR_FROM_INDEX(X) ((X) + 'A')
+#define COMMAND_NAME_FROM_INDEX(X) ((X) + 'A')
 
 GCodeCommand *createCommand();
 unsigned char parseString(char *gcodeLine, GCodeCommand *command);
