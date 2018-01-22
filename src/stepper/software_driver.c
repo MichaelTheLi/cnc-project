@@ -74,21 +74,23 @@ StepState* getStepperState(unsigned char stepperId) {
     return &stepperStates[stepperId];
 }
 
-unsigned char getPinsValues(unsigned char stepperId) {
-    StepState* statePtr = getStepperState(stepperId);
-
-    if (!statePtr) {
-        return NULL;
-    }
-
-    StepState state = *statePtr;
-
-    return state.phases[state.phase];
-}
-
 void makeStep(unsigned char stepperId) {
     StepState* statePtr = getStepperState(stepperId);
 
+    makeStepByPtr(statePtr);
+}
+
+void setDirection(unsigned char stepperId, enum StepperDirection direction) {
+    setDirectionByPtr(&stepperStates[stepperId], direction);
+}
+
+unsigned char getPinsValues(unsigned char stepperId) {
+    StepState* statePtr = getStepperState(stepperId);
+
+    return getPinsValuesByPtr(statePtr);
+}
+
+void makeStepByPtr(StepState *statePtr) {
     if (!statePtr) {
         return;
     }
@@ -110,9 +112,19 @@ void makeStep(unsigned char stepperId) {
     }
 
     state.phase = (unsigned int) phase;
-    stepperStates[stepperId] = state;
+    *statePtr = state;
 }
 
-void setDirection(unsigned char stepperId, enum StepperDirection direction) {
-    stepperStates[stepperId].direction = direction;
+unsigned char getPinsValuesByPtr(StepState *statePtr) {
+    if (!statePtr) {
+        return NULL;
+    }
+
+    StepState state = *statePtr;
+
+    return state.phases[state.phase];
+}
+
+void setDirectionByPtr(StepState *statePtr, enum StepperDirection direction) {
+    statePtr->direction = direction;
 }

@@ -27,7 +27,7 @@ float processToken(char *token) {
 }
 
 GCodeParseResult parseString(char *gcodeLine, GCodeCommand *command) {
-    GCodeParseResult result = empty;
+    GCodeParseResult result = gcode_parse_empty;
 
     const char delim[2] = " ";
 
@@ -45,8 +45,8 @@ GCodeParseResult parseString(char *gcodeLine, GCodeCommand *command) {
         }
 
         (*command)[blockName - 'A'] = value;
-        if (result == empty) {
-            result = success;
+        if (result == gcode_parse_empty) {
+            result = gcode_parse_success;
         }
 
         token = strtok(NULL, delim);

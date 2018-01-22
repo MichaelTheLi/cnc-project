@@ -29,4 +29,8 @@ void makeStep(unsigned char stepperId);
 void setDirection(unsigned char stepperId, enum StepperDirection direction);
 unsigned char getPinsValues(unsigned char stepperId);
 
+void makeStepByPtr(StepState *stepState);
+void setDirectionByPtr(StepState *stepState, enum StepperDirection direction);
+unsigned char getPinsValuesByPtr(StepState *stepState);
+
 #endif //CLION_AVR_SOFTWARE_DRIVER_H

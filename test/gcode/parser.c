@@ -11,7 +11,7 @@ START_TEST (test_parser_reads_int_letter)
     GCodeCommand *commandPtr = createCommand();
     GCodeParseResult result = parseString(inputString, commandPtr);
 
-    ck_assert_msg(result == success, "Result should be 'success'");
+    ck_assert_msg(result == gcode_parse_success, "Result should be 'success'");
 
     GCodeCommand command = *commandPtr;
 
@@ -142,7 +142,7 @@ START_TEST (test_parser_empty_string_should_be_parsed_correctly_and_returns_stat
         GCodeCommand *commandPtr = createCommand();
         GCodeParseResult result = parseString(inputString, commandPtr);
 
-        ck_assert_msg(result == empty, "Result should be 'success'");
+        ck_assert_msg(result == gcode_parse_empty, "Result should be 'success'");
 
         GCodeCommand command = *commandPtr;
 
@@ -158,7 +158,7 @@ START_TEST (test_parser_comment_string_1_should_be_parsed_correctly_and_returns_
         GCodeCommand *commandPtr = createCommand();
         GCodeParseResult result = parseString(inputString, commandPtr);
 
-        ck_assert_msg(result == empty, "Result should be 'empty'");
+        ck_assert_msg(result == gcode_parse_empty, "Result should be 'empty'");
 
         GCodeCommand command = *commandPtr;
 
@@ -174,7 +174,7 @@ START_TEST (test_parser_comment_string_2_should_be_parsed_correctly_and_returns_
         GCodeCommand *commandPtr = createCommand();
         GCodeParseResult result = parseString(inputString, commandPtr);
 
-        ck_assert_msg(result == empty, "Result should be 'empty'");
+        ck_assert_msg(result == gcode_parse_empty, "Result should be 'empty'");
 
         GCodeCommand command = *commandPtr;
 

@@ -8,7 +8,7 @@
 #define COMMAND_SIZE 26
 
 typedef float *GCodeCommand;
-typedef enum { success, empty, error } GCodeParseResult;
+typedef enum { gcode_parse_success, gcode_parse_empty, gcode_parse_error } GCodeParseResult;
 
 #define COMMAND_INDEX(X) ((X) - 'A')
 #define COMMAND_NAME_FROM_INDEX(X) ((X) + 'A')

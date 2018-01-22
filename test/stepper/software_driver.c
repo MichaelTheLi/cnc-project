@@ -92,6 +92,20 @@ START_TEST (test_state_direction_changed_correctly)
 }
 END_TEST
 
+START_TEST (test_state_direction_by_ptr_changed_correctly)
+    {
+        StepState *state = getStepperState(1);
+
+        ck_assert(state->direction == CW);
+
+        setDirectionByPtr(state, CCW);
+        StepState state2 = *getStepperState(1);
+
+        ck_assert(state->direction == CCW);
+        ck_assert(state2.direction == CCW);
+    }
+END_TEST
+
 START_TEST (test_state_make_step_changes_state_correctly)
 {
     unsigned char stepperId = 3;
@@ -147,6 +161,62 @@ START_TEST (test_state_make_step_changes_state_correctly_in_CCW)
 }
 END_TEST
 
+START_TEST (test_state_make_step_by_ptr_changes_state_correctly)
+    {
+        unsigned char stepperId = 3;
+        StepState *stepState = attachStepper(stepperId, FULL_STEP_SINGLE_PHASE);
+
+        makeStepByPtr(stepState);
+        StepState state = *getStepperState(stepperId);
+        ck_assert(state.phase == 1);
+
+        makeStepByPtr(stepState);
+        StepState state1 = *getStepperState(stepperId);
+        ck_assert(state1.phase == 2);
+
+        makeStepByPtr(stepState);
+        StepState state2 = *getStepperState(stepperId);
+        ck_assert(state2.phase == 3);
+
+        makeStepByPtr(stepState);
+        StepState state3 = *getStepperState(stepperId);
+        ck_assert(state3.phase == 0);
+
+        makeStepByPtr(stepState);
+        StepState state4 = *getStepperState(stepperId);
+        ck_assert(state4.phase == 1);
+    }
+END_TEST
+
+START_TEST (test_state_make_step_by_ptr_changes_state_correctly_in_CCW)
+    {
+        unsigned char stepperId = 4;
+        StepState *stepState = attachStepper(stepperId, FULL_STEP_SINGLE_PHASE);
+
+        setDirection(stepperId, CCW);
+
+        makeStepByPtr(stepState);
+        StepState state = *getStepperState(stepperId);
+        ck_assert_uint_eq(state.phase, 3);
+
+        makeStepByPtr(stepState);
+        StepState state1 = *getStepperState(stepperId);
+        ck_assert_uint_eq(state1.phase, 2);
+
+        makeStepByPtr(stepState);
+        StepState state2 = *getStepperState(stepperId);
+        ck_assert_uint_eq(state2.phase, 1);
+
+        makeStepByPtr(stepState);
+        StepState state3 = *getStepperState(stepperId);
+        ck_assert_uint_eq(state3.phase, 0);
+
+        makeStepByPtr(stepState);
+        StepState state4 = *getStepperState(stepperId);
+        ck_assert_uint_eq(state4.phase, 3);
+    }
+END_TEST
+
 START_TEST (test_state_get_pins_works)
 {
     unsigned char stepperId = 5;
@@ -184,6 +254,43 @@ START_TEST (test_state_get_pins_works)
 }
 END_TEST
 
+START_TEST (test_state_get_pins_by_ptr_works)
+    {
+        unsigned char stepperId = 5;
+        unsigned char pins;
+
+        StepState *statePtr = attachStepper(stepperId, FULL_STEP_SINGLE_PHASE);
+
+        pins = getPinsValuesByPtr(statePtr);
+        ck_assert_uint_eq(pins, 0b0110);
+
+        makeStep(stepperId);
+        pins = getPinsValuesByPtr(statePtr);
+        ck_assert_uint_eq(pins, 0b0101);
+
+        makeStep(stepperId);
+        pins = getPinsValuesByPtr(statePtr);
+        ck_assert_uint_eq(pins, 0b1001);
+
+        makeStep(stepperId);
+        pins = getPinsValuesByPtr(statePtr);
+        ck_assert_uint_eq(pins, 0b1010);
+
+        makeStep(stepperId);
+        pins = getPinsValuesByPtr(statePtr);
+        ck_assert_uint_eq(pins, 0b0110);
+
+        makeStep(stepperId);
+        pins = getPinsValuesByPtr(statePtr);
+        ck_assert_uint_eq(pins, 0b0101);
+
+        setDirection(stepperId, CCW);
+        makeStep(stepperId);
+        pins = getPinsValuesByPtr(statePtr);
+        ck_assert_uint_eq(pins, 0b0110);
+    }
+END_TEST
+
 void fillSuite_stepper_software_driver(Suite* suite) {
     TCase *tcase = tcase_create("attachStepper");
     tcase_add_test(tcase, test_state_attach_returns);
@@ -209,4 +316,19 @@ void fillSuite_stepper_software_driver(Suite* suite) {
     TCase *tcase4 = tcase_create("getPinsValues");
     tcase_add_test(tcase4, test_state_get_pins_works);
     suite_add_tcase(suite, tcase4);
+
+
+    TCase *tcase2ByPtr = tcase_create("setDirectionByPtr");
+    tcase_add_test(tcase2ByPtr, test_state_direction_by_ptr_changed_correctly);
+    suite_add_tcase(suite, tcase2ByPtr);
+
+    TCase *tcaseMakeStepByPtr = tcase_create("makeStepByPtr");
+    tcase_add_test(tcaseMakeStepByPtr, test_state_make_step_by_ptr_changes_state_correctly);
+    tcase_add_test(tcaseMakeStepByPtr, test_state_make_step_by_ptr_changes_state_correctly_in_CCW);
+    suite_add_tcase(suite, tcaseMakeStepByPtr);
+
+    TCase *tcase4ByPtr = tcase_create("getPinsValuesByPtr");
+    tcase_add_test(tcase4ByPtr, test_state_get_pins_by_ptr_works);
+    suite_add_tcase(suite, tcase4ByPtr);
+
 }
