@@ -8,11 +8,12 @@
 #define COMMAND_SIZE 26
 
 typedef float *GCodeCommand;
+typedef enum { success, empty, error } GCodeParseResult;
 
 #define COMMAND_INDEX(X) ((X) - 'A')
 #define COMMAND_NAME_FROM_INDEX(X) ((X) + 'A')
 
 GCodeCommand *createCommand();
-unsigned char parseString(char *gcodeLine, GCodeCommand *command);
+GCodeParseResult parseString(char *gcodeLine, GCodeCommand *command);
 
 #endif //CLION_AVR_PARSER_H

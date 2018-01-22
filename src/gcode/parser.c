@@ -18,9 +18,6 @@ GCodeCommand *createCommand() {
 
 float processToken(char *token) {
     char blockName = token[0];
-    if (blockName == ';') { // Block is a comment
-        return NAN;
-    }
     if (blockName == '(') { // Block is a comment
         strtok(NULL, ")");
         return NAN;
@@ -29,25 +26,33 @@ float processToken(char *token) {
     return atof(token + 1);
 }
 
-unsigned char parseString(char *gcodeLine, GCodeCommand *command) {
+GCodeParseResult parseString(char *gcodeLine, GCodeCommand *command) {
+    GCodeParseResult result = empty;
+
     const char delim[2] = " ";
 
     char *line = strdup(gcodeLine);
     char *token = strtok(line, delim);
     while( token != NULL ) {
+        char blockName = token[0];
+        if (blockName == ';') { // Semicolon comment, terminate
+            break;
+        }
         float value = processToken(token);
         if (isnan(value)) {
             token = strtok(NULL, delim);
             continue;
         }
 
-        char blockName = token[0];
         (*command)[blockName - 'A'] = value;
+        if (result == empty) {
+            result = success;
+        }
 
         token = strtok(NULL, delim);
     }
 
     free(line);
 
-    return 1;
+    return result;
 }
