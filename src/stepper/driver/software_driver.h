@@ -5,11 +5,19 @@
 #ifndef CLION_AVR_SOFTWARE_DRIVER_H
 #define CLION_AVR_SOFTWARE_DRIVER_H
 
-#define MAX_STEPPERS 10 // Just because
+#include <stdint.h>
+#include "../enums.h"
 
-enum StepperMode { FULL_STEP_SINGLE_PHASE, FULL_STEP_DOUBLE_PHASE, HALF_STEP };
-enum StepperDirection { CW, CCW };
+#define MAX_SOFTWARE_STEPPERS 10 // Just because
+
 enum StepperAttachMode { ATTACHED, DETACHED };
+
+typedef struct {
+    unsigned char A1_pin;
+    unsigned char A2_pin;
+    unsigned char B1_pin;
+    unsigned char B2_pin;
+} ConnectedPins;
 
 typedef struct {
     enum StepperMode mode;
@@ -19,18 +27,18 @@ typedef struct {
     unsigned char phasesCount;
     unsigned char *phases;
     enum StepperAttachMode attachMode;
+    uint8_t *port;
+    ConnectedPins pins;
 } StepState;
 
-
-StepState* attachStepper(unsigned char stepperId, enum StepperMode mode);
+StepState createStepper(enum StepperMode mode, uint8_t *port, ConnectedPins pins);
+StepState* attachStepper(unsigned char stepperId, enum StepperMode mode, uint8_t *port, ConnectedPins pins);
 StepState* getStepperState(unsigned char stepperId);
 
 void makeStep(unsigned char stepperId);
 void setDirection(unsigned char stepperId, enum StepperDirection direction);
-unsigned char getPinsValues(unsigned char stepperId);
 
 void makeStepByPtr(StepState *stepState);
 void setDirectionByPtr(StepState *stepState, enum StepperDirection direction);
-unsigned char getPinsValuesByPtr(StepState *stepState);
 
 #endif //CLION_AVR_SOFTWARE_DRIVER_H

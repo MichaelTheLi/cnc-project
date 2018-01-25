@@ -3,9 +3,12 @@
 //
 
 #include <stddef.h>
+#include <stdint.h>
 #include "software_driver.h"
+#include "../../bits.h"
+#include "../../core/core.h"
 
-StepState stepperStates[MAX_STEPPERS];
+StepState stepperStates[MAX_SOFTWARE_STEPPERS];
 
 unsigned char stepsFullSingle[] = { // TODO same as double for now
     0b0110,
@@ -32,12 +35,11 @@ unsigned char stepsHalf[] = {
     0b0010,
 };
 
-StepState* attachStepper(unsigned char stepperId, enum StepperMode mode) {
-    if (stepperId >= MAX_STEPPERS) {
-        return NULL;
-    }
+unsigned char getPinsValuesByPtr(StepState *statePtr);
+void setPortOutput(StepState *statePtr);
 
-     StepState state = {
+StepState createStepper(enum StepperMode mode, uint8_t *port, ConnectedPins pins) {
+    StepState state = {
         mode,
         0,
         0UL,
@@ -60,14 +62,26 @@ StepState* attachStepper(unsigned char stepperId, enum StepperMode mode) {
     }
 
     state.attachMode = ATTACHED;
+    state.port = port;
+    state.pins = pins;
 
-    stepperStates[stepperId] = state;
+    setPortOutput(&state);
+
+    return state;
+}
+
+StepState* attachStepper(unsigned char stepperId, enum StepperMode mode, uint8_t *port, ConnectedPins pins) {
+    if (stepperId >= MAX_SOFTWARE_STEPPERS) {
+        return NULL;
+    }
+
+    stepperStates[stepperId] = createStepper(mode, port, pins);
 
     return &stepperStates[stepperId];
 }
 
 StepState* getStepperState(unsigned char stepperId) {
-    if (stepperId >= MAX_STEPPERS) {
+    if (stepperId >= MAX_SOFTWARE_STEPPERS) {
         return NULL;
     }
 
@@ -82,12 +96,6 @@ void makeStep(unsigned char stepperId) {
 
 void setDirection(unsigned char stepperId, enum StepperDirection direction) {
     setDirectionByPtr(&stepperStates[stepperId], direction);
-}
-
-unsigned char getPinsValues(unsigned char stepperId) {
-    StepState* statePtr = getStepperState(stepperId);
-
-    return getPinsValuesByPtr(statePtr);
 }
 
 void makeStepByPtr(StepState *statePtr) {
@@ -113,6 +121,20 @@ void makeStepByPtr(StepState *statePtr) {
 
     state.phase = (unsigned int) phase;
     *statePtr = state;
+
+    // Output to hardware
+    setPortOutput(statePtr);
+}
+
+void setPortOutput(StepState *statePtr) {
+    unsigned char pins = getPinsValuesByPtr(statePtr);
+    uint8_t port = *statePtr->port;
+    bit_write(bit_get(pins, BIT(0)), port, BIT(statePtr->pins.A1_pin));
+    bit_write(bit_get(pins, BIT(1)), port, BIT(statePtr->pins.A2_pin));
+    bit_write(bit_get(pins, BIT(2)), port, BIT(statePtr->pins.B1_pin));
+    bit_write(bit_get(pins, BIT(3)), port, BIT(statePtr->pins.B2_pin));
+
+    *statePtr->port = port;
 }
 
 unsigned char getPinsValuesByPtr(StepState *statePtr) {

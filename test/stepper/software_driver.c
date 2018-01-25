@@ -6,12 +6,21 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include <stepper/software_driver.h>
+#include <stepper/driver/software_driver.h>
 #include "./software_driver.h"
+
+uint8_t testPort = 0x00;
+uint8_t *testPortPtr = &testPort;
+ConnectedPins testPins = {
+    .A1_pin = 0,
+    .A2_pin = 1,
+    .B1_pin = 2,
+    .B2_pin = 3,
+};
 
 START_TEST (test_state_attach_returns)
 {
-    StepState* statePtr = attachStepper(0, FULL_STEP_SINGLE_PHASE);
+    StepState* statePtr = attachStepper(0, FULL_STEP_SINGLE_PHASE, testPortPtr, testPins);
 
     ck_assert_ptr_nonnull(statePtr);
 }
@@ -19,7 +28,7 @@ END_TEST
 
 START_TEST (test_state_attached_has_correct_state)
     {
-        StepState state = *attachStepper(0, FULL_STEP_SINGLE_PHASE);
+        StepState state = *attachStepper(0, FULL_STEP_SINGLE_PHASE, testPortPtr, testPins);
 
         ck_assert_msg(state.attachMode == ATTACHED, "Should be attached");
     }
@@ -27,7 +36,7 @@ END_TEST
 
 START_TEST (test_state_attachStepper_null_if_stepper_id_too_big)
 {
-    StepState* statePtr = attachStepper(123, FULL_STEP_SINGLE_PHASE);
+    StepState* statePtr = attachStepper(123, FULL_STEP_SINGLE_PHASE, testPortPtr, testPins);
 
     ck_assert_ptr_null(statePtr);
 }
@@ -55,7 +64,7 @@ END_TEST
 
 START_TEST (test_state_initialized_properly)
 {
-    attachStepper(1, FULL_STEP_SINGLE_PHASE);
+    attachStepper(1, FULL_STEP_SINGLE_PHASE, testPortPtr, testPins);
 
     StepState state = *getStepperState(1);
 
@@ -66,7 +75,7 @@ START_TEST (test_state_initialized_properly)
     ck_assert(state.step == 0);
     ck_assert(state.attachMode == ATTACHED);
 
-    attachStepper(2, HALF_STEP);
+    attachStepper(2, HALF_STEP, testPortPtr, testPins);
 
     StepState state2 = *getStepperState(2);
 
@@ -109,7 +118,7 @@ END_TEST
 START_TEST (test_state_make_step_changes_state_correctly)
 {
     unsigned char stepperId = 3;
-    attachStepper(stepperId, FULL_STEP_SINGLE_PHASE);
+    attachStepper(stepperId, FULL_STEP_SINGLE_PHASE, testPortPtr, testPins);
 
     makeStep(stepperId);
     StepState state = *getStepperState(stepperId);
@@ -136,7 +145,7 @@ END_TEST
 START_TEST (test_state_make_step_changes_state_correctly_in_CCW)
 {
     unsigned char stepperId = 4;
-    attachStepper(stepperId, FULL_STEP_SINGLE_PHASE);
+    attachStepper(stepperId, FULL_STEP_SINGLE_PHASE, testPortPtr, testPins);
     setDirection(stepperId, CCW);
 
     makeStep(stepperId);
@@ -164,7 +173,7 @@ END_TEST
 START_TEST (test_state_make_step_by_ptr_changes_state_correctly)
     {
         unsigned char stepperId = 3;
-        StepState *stepState = attachStepper(stepperId, FULL_STEP_SINGLE_PHASE);
+        StepState *stepState = attachStepper(stepperId, FULL_STEP_SINGLE_PHASE, testPortPtr, testPins);
 
         makeStepByPtr(stepState);
         StepState state = *getStepperState(stepperId);
@@ -191,7 +200,7 @@ END_TEST
 START_TEST (test_state_make_step_by_ptr_changes_state_correctly_in_CCW)
     {
         unsigned char stepperId = 4;
-        StepState *stepState = attachStepper(stepperId, FULL_STEP_SINGLE_PHASE);
+        StepState *stepState = attachStepper(stepperId, FULL_STEP_SINGLE_PHASE, testPortPtr, testPins);
 
         setDirection(stepperId, CCW);
 
@@ -217,79 +226,35 @@ START_TEST (test_state_make_step_by_ptr_changes_state_correctly_in_CCW)
     }
 END_TEST
 
-START_TEST (test_state_get_pins_works)
+START_TEST (test_port_output_correct)
 {
     unsigned char stepperId = 5;
-    unsigned char pins;
 
-    attachStepper(stepperId, FULL_STEP_SINGLE_PHASE);
+    attachStepper(stepperId, FULL_STEP_SINGLE_PHASE, testPortPtr, testPins);
 
-    pins = getPinsValues(stepperId);
-    ck_assert_uint_eq(pins, 0b0110);
+    ck_assert_uint_eq(testPort, 0b0110);
 
     makeStep(stepperId);
-    pins = getPinsValues(stepperId);
-    ck_assert_uint_eq(pins, 0b0101);
+    ck_assert_uint_eq(testPort, 0b0101);
 
     makeStep(stepperId);
-    pins = getPinsValues(stepperId);
-    ck_assert_uint_eq(pins, 0b1001);
+    ck_assert_uint_eq(testPort, 0b1001);
 
     makeStep(stepperId);
-    pins = getPinsValues(stepperId);
-    ck_assert_uint_eq(pins, 0b1010);
+    ck_assert_uint_eq(testPort, 0b1010);
 
     makeStep(stepperId);
-    pins = getPinsValues(stepperId);
-    ck_assert_uint_eq(pins, 0b0110);
+    ck_assert_uint_eq(testPort, 0b0110);
 
     makeStep(stepperId);
-    pins = getPinsValues(stepperId);
-    ck_assert_uint_eq(pins, 0b0101);
+    ck_assert_uint_eq(testPort, 0b0101);
 
     setDirection(stepperId, CCW);
     makeStep(stepperId);
-    pins = getPinsValues(stepperId);
-    ck_assert_uint_eq(pins, 0b0110);
+    ck_assert_uint_eq(testPort, 0b0110);
 }
 END_TEST
 
-START_TEST (test_state_get_pins_by_ptr_works)
-    {
-        unsigned char stepperId = 5;
-        unsigned char pins;
-
-        StepState *statePtr = attachStepper(stepperId, FULL_STEP_SINGLE_PHASE);
-
-        pins = getPinsValuesByPtr(statePtr);
-        ck_assert_uint_eq(pins, 0b0110);
-
-        makeStep(stepperId);
-        pins = getPinsValuesByPtr(statePtr);
-        ck_assert_uint_eq(pins, 0b0101);
-
-        makeStep(stepperId);
-        pins = getPinsValuesByPtr(statePtr);
-        ck_assert_uint_eq(pins, 0b1001);
-
-        makeStep(stepperId);
-        pins = getPinsValuesByPtr(statePtr);
-        ck_assert_uint_eq(pins, 0b1010);
-
-        makeStep(stepperId);
-        pins = getPinsValuesByPtr(statePtr);
-        ck_assert_uint_eq(pins, 0b0110);
-
-        makeStep(stepperId);
-        pins = getPinsValuesByPtr(statePtr);
-        ck_assert_uint_eq(pins, 0b0101);
-
-        setDirection(stepperId, CCW);
-        makeStep(stepperId);
-        pins = getPinsValuesByPtr(statePtr);
-        ck_assert_uint_eq(pins, 0b0110);
-    }
-END_TEST
 
 void fillSuite_stepper_software_driver(Suite* suite) {
     TCase *tcase = tcase_create("attachStepper");
@@ -313,11 +278,6 @@ void fillSuite_stepper_software_driver(Suite* suite) {
     tcase_add_test(tcase3, test_state_make_step_changes_state_correctly_in_CCW);
     suite_add_tcase(suite, tcase3);
 
-    TCase *tcase4 = tcase_create("getPinsValues");
-    tcase_add_test(tcase4, test_state_get_pins_works);
-    suite_add_tcase(suite, tcase4);
-
-
     TCase *tcase2ByPtr = tcase_create("setDirectionByPtr");
     tcase_add_test(tcase2ByPtr, test_state_direction_by_ptr_changed_correctly);
     suite_add_tcase(suite, tcase2ByPtr);
@@ -327,8 +287,7 @@ void fillSuite_stepper_software_driver(Suite* suite) {
     tcase_add_test(tcaseMakeStepByPtr, test_state_make_step_by_ptr_changes_state_correctly_in_CCW);
     suite_add_tcase(suite, tcaseMakeStepByPtr);
 
-    TCase *tcase4ByPtr = tcase_create("getPinsValuesByPtr");
-    tcase_add_test(tcase4ByPtr, test_state_get_pins_by_ptr_works);
+    TCase *tcase4ByPtr = tcase_create("portOutput");
+    tcase_add_test(tcase4ByPtr, test_port_output_correct);
     suite_add_tcase(suite, tcase4ByPtr);
-
 }

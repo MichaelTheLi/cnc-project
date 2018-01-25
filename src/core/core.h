@@ -5,7 +5,7 @@
 #ifndef CLION_AVR_CORE_H
 #define CLION_AVR_CORE_H
 
-#include "../stepper/software_driver.h"
+#include "../stepper/driver/software_driver.h"
 
 typedef struct {
     StepState *stepState;
