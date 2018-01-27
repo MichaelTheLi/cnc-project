@@ -139,6 +139,46 @@ START_TEST (test__makeStepByPtr_hw__correctly_sets_step_bits)
     }
 END_TEST
 
+START_TEST (test__setDirectionByPtr_hw__correctly_mutate_state)
+    {
+        StepState_hw_popolu_A4988 state = createStepper_hw(
+                FULL_STEP_DOUBLE_PHASE,
+                testPortPtr_hw,
+                5,
+                6,
+                1,
+                2,
+                3
+        );
+
+        setDirectionByPtr_hw(&state, CCW);
+        ck_assert_int_eq(state.dir, CCW);
+
+        setDirectionByPtr_hw(&state, CW);
+        ck_assert_int_eq(state.dir, CW);
+    }
+END_TEST
+
+START_TEST (test__setModeByPtr_hw__correctly_mutate_state)
+    {
+        StepState_hw_popolu_A4988 state = createStepper_hw(
+                FULL_STEP_DOUBLE_PHASE,
+                testPortPtr_hw,
+                5,
+                6,
+                1,
+                2,
+                3
+        );
+
+        setModeByPtr_hw(&state, HALF_STEP);
+        ck_assert_int_eq(state.mode, HALF_STEP);
+
+        setModeByPtr_hw(&state, EIGHTH_STEP);
+        ck_assert_int_eq(state.mode, EIGHTH_STEP);
+    }
+END_TEST
+
 void fillSuite_stepper_hardware_driver(Suite* suite) {
     TCase *tcase = tcase_create("createStepper_hw");
     tcase_add_test(tcase, test_create_works_correctly);
@@ -149,4 +189,9 @@ void fillSuite_stepper_hardware_driver(Suite* suite) {
     tcase_add_test(tcase_make_step, test__makeStepByPtr_hw__correctly_sets_direction_bits);
     tcase_add_test(tcase_make_step, test__makeStepByPtr_hw__correctly_sets_step_bits);
     suite_add_tcase(suite, tcase_make_step);
+
+    TCase *tcase_state_manipulations = tcase_create("check state manipuations");
+    tcase_add_test(tcase_state_manipulations, test__setDirectionByPtr_hw__correctly_mutate_state);
+    tcase_add_test(tcase_state_manipulations, test__setModeByPtr_hw__correctly_mutate_state);
+    suite_add_tcase(suite, tcase_state_manipulations);
 }
