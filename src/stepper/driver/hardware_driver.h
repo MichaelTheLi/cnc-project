@@ -30,7 +30,8 @@ StepState_hw_popolu_A4988 createStepper_hw(
     unsigned char ms3pin
 );
 
-void makeByPtr_hw(StepState_hw_popolu_A4988 *statePtr);
+void makeStepByPtr_hw(StepState_hw_popolu_A4988 *statePtr);
 void setDirectionByPtr_hw(StepState_hw_popolu_A4988 *statePtr, enum StepperDirection direction);
+void setModeByPtr_hw(StepState_hw_popolu_A4988 *statePtr, enum StepperMode mode);
 
 #endif //CLION_AVR_HARDWARE_DRIVER_H

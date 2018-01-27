@@ -27,6 +27,6 @@ void step(StepperState *state) {
 
     } else {
         StepState_hw_popolu_A4988 *ptr = &state->state.h_state;
-        makeByPtr_hw(ptr);
+        makeStepByPtr_hw(ptr);
     }
 }

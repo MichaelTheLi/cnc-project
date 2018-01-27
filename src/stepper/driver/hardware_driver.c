@@ -5,6 +5,8 @@
 #include "hardware_driver.h"
 #include "../../delay.h"
 
+void setMicrosteppingSettings(StepState_hw_popolu_A4988 *statePtr);
+
 StepState_hw_popolu_A4988 createStepper_hw(enum StepperMode mode,
                                            uint8_t *port,
                                            unsigned char step_pin,
@@ -27,25 +29,23 @@ StepState_hw_popolu_A4988 createStepper_hw(enum StepperMode mode,
     return state;
 }
 
-void setMicrosteppingSettings(StepState_hw_popolu_A4988 *statePtr);
-
-void makeByPtr_hw(StepState_hw_popolu_A4988 *statePtr) {
-    uint8_t port = *statePtr->port;
+void makeStepByPtr_hw(StepState_hw_popolu_A4988 *statePtr) {
+    uint8_t *port = statePtr->port;
 
     // Set microstepping settings
     setMicrosteppingSettings(statePtr);
 
     // Set direction
     if (statePtr->dir == CW) {
-        bit_set(port, BIT(statePtr->dir_pin));
+        bit_set(*port, BIT(statePtr->dir_pin));
     } else {
-        bit_clear(port, BIT(statePtr->dir_pin));
+        bit_clear(*port, BIT(statePtr->dir_pin));
     }
 
     // make actual step pulse
-    bit_set(port, BIT(statePtr->step_pin));
+    bit_set(*port, BIT(statePtr->step_pin));
     delay_us(500);
-    bit_clear(port, BIT(statePtr->step_pin));
+    bit_clear(*port, BIT(statePtr->step_pin));
     delay_us(500);
 }
 
@@ -53,35 +53,39 @@ void setDirectionByPtr_hw(StepState_hw_popolu_A4988 *statePtr, enum StepperDirec
     statePtr->dir = direction;
 }
 
+void setModeByPtr_hw(StepState_hw_popolu_A4988 *statePtr, enum StepperMode mode) {
+    statePtr->mode = mode;
+}
+
 void setMicrosteppingSettings(StepState_hw_popolu_A4988 *statePtr) {
-    uint8_t port = *statePtr->port;
+    uint8_t *port = statePtr->port;
 
     switch (statePtr->mode) {
         case FULL_STEP_DOUBLE_PHASE:
         case FULL_STEP_SINGLE_PHASE:
-            bit_clear(port, BIT(statePtr->ms1pin));
-            bit_clear(port, BIT(statePtr->ms2pin));
-            bit_clear(port, BIT(statePtr->ms3pin));
+            bit_clear(*port, BIT(statePtr->ms1pin));
+            bit_clear(*port, BIT(statePtr->ms2pin));
+            bit_clear(*port, BIT(statePtr->ms3pin));
             break;
         case HALF_STEP:
-            bit_set(port, BIT(statePtr->ms1pin));
-            bit_clear(port, BIT(statePtr->ms2pin));
-            bit_clear(port, BIT(statePtr->ms3pin));
+            bit_set(*port, BIT(statePtr->ms1pin));
+            bit_clear(*port, BIT(statePtr->ms2pin));
+            bit_clear(*port, BIT(statePtr->ms3pin));
             break;
         case QUARTER_STEP:
-            bit_clear(port, BIT(statePtr->ms1pin));
-            bit_set(port, BIT(statePtr->ms2pin));
-            bit_clear(port, BIT(statePtr->ms3pin));
+            bit_clear(*port, BIT(statePtr->ms1pin));
+            bit_set(*port, BIT(statePtr->ms2pin));
+            bit_clear(*port, BIT(statePtr->ms3pin));
             break;
         case EIGHTH_STEP:
-            bit_set(port, BIT(statePtr->ms1pin));
-            bit_set(port, BIT(statePtr->ms2pin));
-            bit_clear(port, BIT(statePtr->ms3pin));
+            bit_set(*port, BIT(statePtr->ms1pin));
+            bit_set(*port, BIT(statePtr->ms2pin));
+            bit_clear(*port, BIT(statePtr->ms3pin));
             break;
         case SIXTEENTH_STEP:
-            bit_set(port, BIT(statePtr->ms1pin));
-            bit_set(port, BIT(statePtr->ms2pin));
-            bit_set(port, BIT(statePtr->ms3pin));
+            bit_set(*port, BIT(statePtr->ms1pin));
+            bit_set(*port, BIT(statePtr->ms2pin));
+            bit_set(*port, BIT(statePtr->ms3pin));
             break;
     }
 }
