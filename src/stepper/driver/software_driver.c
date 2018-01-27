@@ -47,10 +47,6 @@ StepState createStepper(enum StepperMode mode, uint8_t *port, ConnectedPins pins
     };
 
     switch (mode) {
-        case FULL_STEP_DOUBLE_PHASE:
-            state.phasesCount = 4;
-            state.phases = stepsFullSingle;
-            break;
         case FULL_STEP_SINGLE_PHASE:
             state.phasesCount = 4;
             state.phases = stepsFullDouble;
@@ -58,6 +54,11 @@ StepState createStepper(enum StepperMode mode, uint8_t *port, ConnectedPins pins
         case HALF_STEP:
             state.phasesCount = 8;
             state.phases = stepsHalf;
+            break;
+        case FULL_STEP_DOUBLE_PHASE:
+        default:
+            state.phasesCount = 4;
+            state.phases = stepsFullSingle;
             break;
     }
 
