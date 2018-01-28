@@ -4,47 +4,60 @@
  * License: <insert your license reference here>
  */
 
-#ifndef F_CPU
-#define F_CPU 8000000
-#endif
-
 #include <avr/io.h>
-#ifndef DEBUG_BUILD
-    #define DEBUG_BUILD false
-    #include <util/delay.h>
-#endif
-#include <avr/sleep.h>
+#include "bits.h"
+#include "core/core.h"
+#include "gcode/executor.h"
 
-/*
- * This demonstrate how to use the avr_mcu_section.h file
- * The macro adds a section to the ELF file with useful
- * information for the simulator
- */
-//#include "avr/avr_mcu_section.h"
-//AVR_MCU(F_CPU, "atmega8");
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wmissing-noreturn"
 
-void delay_ms(char n) {
-#ifndef DEBUG_BUILD
-    for(char i = 0; i < n; i++){
-        _delay_ms(30);  /* max is 262.14 ms / F_CPU in MHz */
-    }
-#endif
-}
+GCodeCommand *createDemoMoveCommand(float x, float y);
+
 
 int main(void)
 {
-    DDRD = 1 << 4;           /* make the LED pin an output */
+    bit_set(DDRB, BIT(0));
+    bit_set(DDRB, BIT(1));
+    bit_set(DDRB, BIT(2));
+    bit_set(DDRB, BIT(3));
+    bit_set(DDRB, BIT(4));
+
+    CNCPosition* cncPosition = initializeCNCPosition();
+
     for(;;){
-        char i;
-        for(i = 0; i < 10; i++){
-            delay_ms(30);  /* max is 262.14 ms / F_CPU in MHz */
-        }
-        PORTD ^= 1 << 4;    /* toggle the LED */
-
-        // this quits the simulator, since interupts are off
-        // this is a "feature" that allows running tests cases and exit
-//        sleep_cpu();
+        executeCommand(
+            createDemoMoveCommand(50.0f, 100.0f),
+            cncPosition
+        );
+        executeCommand(
+            createDemoMoveCommand(100.0f, 0.0f),
+            cncPosition
+        );
+        executeCommand(
+            createDemoMoveCommand(0.0f, 75.0f),
+            cncPosition
+        );
+        executeCommand(
+            createDemoMoveCommand(100.0f, 75.0f),
+            cncPosition
+        );
+        executeCommand(
+            createDemoMoveCommand(0.0f, 0.0f),
+            cncPosition
+        );
     }
-
-    return 0;               /* never reached */
 }
+
+GCodeCommand *createDemoMoveCommand(float x, float y) {
+    GCodeCommand *commandPtr = createCommand();
+    GCodeCommand command = *commandPtr;
+
+    command[COMMAND_INDEX('G')] = 1;
+    command[COMMAND_INDEX('X')] = x;
+    command[COMMAND_INDEX('Y')] = y;
+
+    return commandPtr;
+}
+
+#pragma clang diagnostic pop

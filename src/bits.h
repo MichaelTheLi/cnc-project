@@ -9,6 +9,8 @@
 #define _bit_clear(p,m) ((p) &= ~(m))
 #define _bit_flip(p,m) ((p) ^= (m))
 
+#ifdef LOGGED_BITS
+
 #define BITS_LOG_SIZE 64000
 enum BitLogType {bl_set, bl_clear, bl_flip};
 typedef struct {
@@ -21,8 +23,6 @@ BitLogItem bits_log[BITS_LOG_SIZE];
 
 void bitSetWithSave(uint8_t *p, unsigned char m, enum BitLogType type);
 void bitLogClear();
-
-#ifdef LOGGED_BITS
 
 #define bit_set(p,m) (bitSetWithSave)(&(p), m, bl_set)
 #define bit_clear(p,m) (bitSetWithSave)(&(p), m, bl_clear)

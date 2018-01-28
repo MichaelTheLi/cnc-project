@@ -12,7 +12,7 @@
 typedef struct {
     enum StepperMode mode;
     enum StepperDirection dir;
-    uint8_t *port;
+    volatile uint8_t *port;
     unsigned char step_pin;
     unsigned char dir_pin;
     unsigned char ms1pin;
@@ -22,7 +22,7 @@ typedef struct {
 
 StepState_hw_popolu_A4988 createStepper_hw(
     enum StepperMode mode,
-    uint8_t *port,
+    volatile uint8_t *port,
     unsigned char step_pin,
     unsigned char dir_pin,
     unsigned char ms1pin,

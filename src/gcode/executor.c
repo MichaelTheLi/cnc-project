@@ -3,9 +3,8 @@
 //
 
 #include "executor.h"
-#include "../../../../../../../../usr/include/math.h"
+#include "math.h"
 #include "../planner/linear.h"
-#include "../core/core.h"
 
 void executeLinearMovement(float x, float y, float z, CNCPosition *cncPosition);
 void executePlan(Plan *plan, CNCPosition *cncPosition);
@@ -47,6 +46,10 @@ void executeLinearMovement(float x, float y, float z, CNCPosition *cncPosition) 
             break;
         }
     } while(1);
+
+    // TODO Doing this we ignore to discrete movements error. Should be reported maybe? Should not accumulate for sure
+    cncPosition->x.pos = x;
+    cncPosition->y.pos = y;
 }
 
 void executePlan(Plan *plan, CNCPosition *cncPosition) {

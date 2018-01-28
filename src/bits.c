@@ -4,7 +4,7 @@
 
 #include <stdint.h>
 #include "./bits.h"
-
+#ifdef LOGGED_BITS
 unsigned int bits_log_index = 0;
 
 void bitLogClear() {
@@ -31,3 +31,5 @@ void bitSetWithSave(uint8_t *p, unsigned char m, enum BitLogType type) {
             break;
     }
 }
+
+#endif
