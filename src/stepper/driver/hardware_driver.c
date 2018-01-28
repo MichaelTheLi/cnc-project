@@ -8,7 +8,7 @@
 void setMicrosteppingSettings(StepState_hw_popolu_A4988 *statePtr);
 
 StepState_hw_popolu_A4988 createStepper_hw(enum StepperMode mode,
-                                           uint8_t *port,
+                                           volatile uint8_t *port,
                                            unsigned char step_pin,
                                            unsigned char dir_pin,
                                            unsigned char ms1pin,
@@ -30,7 +30,7 @@ StepState_hw_popolu_A4988 createStepper_hw(enum StepperMode mode,
 }
 
 void makeStepByPtr_hw(StepState_hw_popolu_A4988 *statePtr) {
-    uint8_t *port = statePtr->port;
+    volatile uint8_t *port = statePtr->port;
 
     // Set microstepping settings
     setMicrosteppingSettings(statePtr);
@@ -42,7 +42,7 @@ void makeStepByPtr_hw(StepState_hw_popolu_A4988 *statePtr) {
         bit_clear(*port, BIT(statePtr->dir_pin));
     }
 
-    // make actual step pulse
+    // make actual step pulsea
     bit_set(*port, BIT(statePtr->step_pin));
     delay_us(500);
     bit_clear(*port, BIT(statePtr->step_pin));
@@ -58,7 +58,14 @@ void setModeByPtr_hw(StepState_hw_popolu_A4988 *statePtr, enum StepperMode mode)
 }
 
 void setMicrosteppingSettings(StepState_hw_popolu_A4988 *statePtr) {
-    uint8_t *port = statePtr->port;
+    volatile uint8_t *port = statePtr->port;
+
+    if (statePtr->ms1pin == 255
+        || statePtr->ms2pin == 255
+        || statePtr->ms2pin == 255
+    ) {
+        return;
+    }
 
     switch (statePtr->mode) {
         case FULL_STEP_DOUBLE_PHASE:

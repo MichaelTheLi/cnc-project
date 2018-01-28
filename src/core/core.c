@@ -10,57 +10,44 @@
 AxisState initializeAxis(StepperState stepState, float stepSize);
 
 CNCPosition* initializeCNCPosition() {
+    InnerStepperState state1 = {};
+    state1.h_state = createStepper_hw(
+            FULL_STEP_DOUBLE_PHASE,
+            &PORTB,
+            PB1, // STEP pin
+            PB2, // DIR pin
+            255, // ms1 pin
+            255, // ms2 pin
+            255  // ms3 pin
+    );
     AxisState xAxis = initializeAxis(
             initiateStepper(
                     hardware_polulu,
-                    createStepper_hw(
-                            FULL_STEP_DOUBLE_PHASE,
-                            &PORTD,
-                            PD0, // STEP pin
-                            PD1, // DIR pin
-                            PD2, // ms1 pin
-                            PD3, // ms2 pin
-                            PD4  // ms3 pin
-                    )
+                    state1
             ),
-            0.0001
+            0.15
+    );
+    InnerStepperState state2 = {};
+    state2.h_state = createStepper_hw(
+            FULL_STEP_DOUBLE_PHASE,
+            &PORTB,
+            PB3, // STEP pin
+            PB4, // DIR pin
+            255, // ms1 pin
+            255, // ms2 pin
+            255  // ms3 pin
     );
     AxisState yAxis = initializeAxis(
             initiateStepper(
                     hardware_polulu,
-                    createStepper_hw(
-                            FULL_STEP_DOUBLE_PHASE,
-                            &PORTD,
-                            PD5, // STEP pin
-                            PD6, // DIR pin
-                            PD2, // ms1 pin
-                            PD3, // ms2 pin
-                            PD4  // ms3 pin
-                    )
+                    state2
             ),
-            0.0001
-    );
-    AxisState zAxis = initializeAxis(
-             // TODO somehow this should be servo instead of stepper
-            initiateStepper(
-                    hardware_polulu,
-                    createStepper_hw(
-                            FULL_STEP_DOUBLE_PHASE,
-                            PORTD,
-                            PD7, // STEP pin
-                            PD7, // DIR pin
-                            PD2, // ms1 pin
-                            PD3, // ms2 pin
-                            PD4  // ms3 pin
-                    )
-            ),
-            0.0007
+            0.15
     );
 
     CNCPosition cncPosition = {
             .x = xAxis,
             .y = yAxis,
-            .z = zAxis,
             .feedRate = 10.1,
     };
 
@@ -76,7 +63,7 @@ CNCPosition* initializeCNCPosition() {
 }
 
 AxisState initializeAxis(StepperState stepState, float stepSize) {
-    return {
+    return (AxisState) {
             .pos = 0.0,
             .stepState = stepState,
             .stepSize = stepSize,

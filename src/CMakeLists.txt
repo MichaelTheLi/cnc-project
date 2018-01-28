@@ -32,7 +32,8 @@ include(../cmake-lists-files/custom-avr.cmake)
 ##################################################################################
 # needs to be defined for AVR toolchain
 ##################################################################################
-set(MCU_SPEED "8000000UL")
+set(MCU_SPEED 8000000UL)
+add_definitions("-DF_CPU=8000000UL")
 
 ##################################################################################
 # add all sources and headers from ./src
@@ -50,7 +51,7 @@ add_avr_executable(
 )
 
 add_definitions(-DDELAY_ENABLED=1)
-
+set(CMAKE_VERBOSE_MAKEFILE ON)
 #################################################################################
 # add AVR library
 #################################################################################
