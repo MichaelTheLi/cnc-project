@@ -73,9 +73,6 @@ endif(CMAKE_BUILD_TYPE MATCHES Debug)
 # compiler options for all build types
 ##################################################################################
 add_definitions("-DF_CPU=${MCU_SPEED}")
-if(CMAKE_BUILD_TYPE MATCHES Debug)
-   add_definitions("-DDEBUG_BUILD=TRUE")
-endif(CMAKE_BUILD_TYPE MATCHES Debug)
 add_definitions("-fpack-struct")
 add_definitions("-fshort-enums")
 add_definitions("-Wall")

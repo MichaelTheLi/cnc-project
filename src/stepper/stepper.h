@@ -20,4 +20,9 @@ typedef struct {
     InnerStepperState state;
 } StepperState;
 
+StepperState initiateStepper(enum StepperDriverType type, InnerStepperState state);
+void setStepperDir(StepperState *state, enum StepperDirection dir);
+void makeStepperStep(StepperState *state);
+
+
 #endif //CLION_AVR_STEPPER_H

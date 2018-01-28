@@ -4,21 +4,56 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <avr/io.h>
 #include "core.h"
 
-AxisState initializeAxis(StepState *stepState, float stepSize);
+AxisState initializeAxis(StepperState stepState, float stepSize);
 
 CNCPosition* initializeCNCPosition() {
     AxisState xAxis = initializeAxis(
-            attachStepper(0, FULL_STEP_DOUBLE_PHASE),
+            initiateStepper(
+                    hardware_polulu,
+                    createStepper_hw(
+                            FULL_STEP_DOUBLE_PHASE,
+                            &PORTD,
+                            PD0, // STEP pin
+                            PD1, // DIR pin
+                            PD2, // ms1 pin
+                            PD3, // ms2 pin
+                            PD4  // ms3 pin
+                    )
+            ),
             0.0001
     );
     AxisState yAxis = initializeAxis(
-            attachStepper(1, FULL_STEP_DOUBLE_PHASE),
+            initiateStepper(
+                    hardware_polulu,
+                    createStepper_hw(
+                            FULL_STEP_DOUBLE_PHASE,
+                            &PORTD,
+                            PD5, // STEP pin
+                            PD6, // DIR pin
+                            PD2, // ms1 pin
+                            PD3, // ms2 pin
+                            PD4  // ms3 pin
+                    )
+            ),
             0.0001
     );
     AxisState zAxis = initializeAxis(
-            attachStepper(2, FULL_STEP_DOUBLE_PHASE),
+             // TODO somehow this should be servo instead of stepper
+            initiateStepper(
+                    hardware_polulu,
+                    createStepper_hw(
+                            FULL_STEP_DOUBLE_PHASE,
+                            PORTD,
+                            PD7, // STEP pin
+                            PD7, // DIR pin
+                            PD2, // ms1 pin
+                            PD3, // ms2 pin
+                            PD4  // ms3 pin
+                    )
+            ),
             0.0007
     );
 
@@ -40,7 +75,7 @@ CNCPosition* initializeCNCPosition() {
     return cncPositionPtr;
 }
 
-AxisState initializeAxis(StepState *stepState, float stepSize) {
+AxisState initializeAxis(StepperState stepState, float stepSize) {
     return {
             .pos = 0.0,
             .stepState = stepState,

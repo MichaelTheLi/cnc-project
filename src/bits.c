@@ -9,12 +9,15 @@ unsigned int bits_log_index = 0;
 
 void bitLogClear() {
     bits_log_index = 0;
-    for (int i = 0; i < 1024; ++i) {
+    for (int i = 0; i < BITS_LOG_SIZE; ++i) {
         bits_log[i] = (BitLogItem){};
     }
 }
 
 void bitSetWithSave(uint8_t *p, unsigned char m, enum BitLogType type) {
+    if (bits_log_index >= BITS_LOG_SIZE) {
+        return;
+    }
     bits_log[bits_log_index++] = (BitLogItem){p, m, type};
     switch (type) {
         case bl_set:

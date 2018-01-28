@@ -3,10 +3,12 @@
 //
 
 #include "executor.h"
-#include "math.h"
+#include "../../../../../../../../usr/include/math.h"
+#include "../planner/linear.h"
+#include "../core/core.h"
 
 void executeLinearMovement(float x, float y, float z, CNCPosition *cncPosition);
-void moveAxisLinear(AxisState *axisState, float newPos);
+void executePlan(Plan *plan, CNCPosition *cncPosition);
 
 GCodeExecuteResult executeCommand(GCodeCommand *gCodeCommand, CNCPosition *cncPosition) {
     GCodeCommand command = *gCodeCommand;
@@ -27,27 +29,47 @@ GCodeExecuteResult executeCommand(GCodeCommand *gCodeCommand, CNCPosition *cncPo
 }
 
 void executeLinearMovement(float x, float y, float z, CNCPosition *cncPosition) {
-    moveAxisLinear(&cncPosition->x, x);
-    moveAxisLinear(&cncPosition->y, y);
-    moveAxisLinear(&cncPosition->z, z);
+    do {
+        Point from = {
+                .x = cncPosition->x.pos * (1/cncPosition->x.stepSize),
+                .y = cncPosition->y.pos * (1/cncPosition->x.stepSize)
+        };
+        Point to = {
+                .x = x * (1/cncPosition->x.stepSize),
+                .y = y * (1/cncPosition->x.stepSize)
+        };
+        Plan plan = {};
+        enum PlannerResult result = bresenham_line_2d(from, to, &plan);
+
+        executePlan(&plan, cncPosition);
+
+        if (result == planner_success) {
+            break;
+        }
+    } while(1);
 }
 
-void moveAxisLinear(AxisState *axisState, float newPos) {
-    StepState *stepState = axisState->stepState;
+void executePlan(Plan *plan, CNCPosition *cncPosition) {
+    for (int i = 0; i < PLAN_SIZE; ++i) {
+        PlanItem item = plan->items[i];
+        if (item.type == none) {
+            break;
+        }
 
-    float moved = 0.0f;
-    float perStep = axisState->stepSize;
-    float dx = newPos - axisState->pos;
+        AxisState *axisState;
+        if (item.type == x_move) {
+            axisState = &cncPosition->x;
+        } else if (item.type == y_move) {
+            axisState = &cncPosition->y;
+        } else {
+            // TODO WTF
+            continue;
+        }
 
-    setDirectionByPtr(stepState, dx < 0 ? CW : CCW);
-
-    while(moved < fabs(dx)) {
-        makeStepByPtr(stepState);
-
-        moved += perStep;
+        setStepperDir(&axisState->stepState, item.direction == plan_item_dir_forward ? CW : CCW);
+        makeStepperStep(&axisState->stepState);
+        axisState->pos += item.direction == plan_item_dir_forward
+            ? axisState->stepSize
+            : -axisState->stepSize;
     }
-
-    axisState->pos += dx < 0
-        ? -moved
-        : moved;
 }

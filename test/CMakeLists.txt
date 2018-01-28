@@ -1,6 +1,7 @@
 enable_testing()
 find_package(Check REQUIRED)
 include_directories(${CHECK_INCLUDE_DIRS})
+#include_directories("/usr/local/Cellar/avr-gcc/7.2.0/avr/include")
 
 #include_directories("/usr/local/Cellar/simavr/HEAD-6660aba/include/simavr")
 
@@ -13,15 +14,20 @@ add_definitions("-DLOGGED_BITS")
 ######################
 # Compiling libraries for PC here
 ######################
+#file(GLOB_RECURSE SRC_C_FILES_FOR_TESTS ${PROJECT_SOURCE_DIR}/src/*.c)
+#file(GLOB_RECURSE SRC_H_FILES_FOR_TESTS ${PROJECT_SOURCE_DIR}/src/*.h)
 add_library(test_bits ../src/bits.c)
+add_library(test_planner_liner ../src/planner/linear.c)
 add_library(test_stepper_software_driver ../src/stepper/driver/software_driver.c)
 add_library(test_stepper_hardware_driver ../src/stepper/driver/hardware_driver.c)
+add_library(test_stepper_driver ../src/stepper/stepper.c)
 add_library(test_gcode_driver ../src/gcode/parser.c)
 add_library(test_gcode_executor ../src/gcode/executor.c)
+#add_library(test_src_lib ${SRC_C_FILES_FOR_TESTS} ${SRC_H_FILES_FOR_TESTS})
 
 
-
-set(LIBS ${LIBS} ${CHECK_LIBRARIES} test_bits test_stepper_software_driver test_stepper_hardware_driver test_gcode_driver test_gcode_executor)
+set(LIBS ${LIBS} ${CHECK_LIBRARIES} test_bits test_planner_liner test_stepper_software_driver test_stepper_hardware_driver test_gcode_driver test_gcode_executor test_stepper_driver)
+#set(LIBS ${LIBS} ${CHECK_LIBRARIES} test_src_lib)
 
 file(GLOB_RECURSE SRC_TESTS_C_FILES ${PROJECT_SOURCE_DIR}/test/*.c)
 file(GLOB_RECURSE SRC_TESTS_HEADERS ${PROJECT_SOURCE_DIR}/test/*.h)

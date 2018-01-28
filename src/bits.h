@@ -9,6 +9,7 @@
 #define _bit_clear(p,m) ((p) &= ~(m))
 #define _bit_flip(p,m) ((p) ^= (m))
 
+#define BITS_LOG_SIZE 64000
 enum BitLogType {bl_set, bl_clear, bl_flip};
 typedef struct {
     uint8_t *addr;
@@ -16,7 +17,7 @@ typedef struct {
     enum BitLogType type;
 } BitLogItem;
 
-BitLogItem bits_log[1024];
+BitLogItem bits_log[BITS_LOG_SIZE];
 
 void bitSetWithSave(uint8_t *p, unsigned char m, enum BitLogType type);
 void bitLogClear();
