@@ -5,7 +5,7 @@
 #ifndef CLION_AVR_LINEAR_H
 #define CLION_AVR_LINEAR_H
 
-#define PLAN_SIZE 1024 // TODO check if its enough
+#define PLAN_SIZE 256 // TODO check if its enough
 
 typedef struct {
     float x;
