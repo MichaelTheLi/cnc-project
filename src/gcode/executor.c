@@ -5,9 +5,15 @@
 #include "executor.h"
 #include "math.h"
 #include "../planner/linear.h"
+#include "../../test/plannerVisualizer.h"
+
+#ifdef TEST_EXECUTOR
+    #include "../../test/plannerVisualizer.h"
+#endif
 
 void executeLinearMovement(float x, float y, float z, CNCPosition *cncPosition);
 void executePlan(Plan *plan, CNCPosition *cncPosition);
+void executePlan_test(Plan *plan, enum PlannerResult result, Point *lastPoint, CNCPosition *cncPosition);
 
 GCodeExecuteResult executeCommand(GCodeCommand *gCodeCommand, CNCPosition *cncPosition) {
     GCodeCommand command = *gCodeCommand;
@@ -30,18 +36,30 @@ GCodeExecuteResult executeCommand(GCodeCommand *gCodeCommand, CNCPosition *cncPo
 void executeLinearMovement(float x, float y, float z, CNCPosition *cncPosition) {
     do {
         Point from = {
-                .x = cncPosition->x.pos * (1/cncPosition->x.stepSize),
-                .y = cncPosition->y.pos * (1/cncPosition->x.stepSize)
+                .x = cncPosition->x.pos,
+                .y = cncPosition->y.pos
         };
         Point to = {
-                .x = x * (1/cncPosition->x.stepSize),
-                .y = y * (1/cncPosition->x.stepSize)
+                .x = x,
+                .y = y
+        };
+        Point stepSizes = {
+                .x = cncPosition->x.stepSize,
+                .y = cncPosition->y.stepSize,
         };
         Plan plan = {};
-        enum PlannerResult result = bresenham_line_2d(from, to, &plan);
+        Point lastPoint = to;
+        convert_coords_to_bresenham_line_2d(&from, &to, stepSizes);
 
+        enum PlannerResult result = bresenham_line_2d(from, to, &plan, &lastPoint);
+
+#ifndef TEST_EXECUTOR
+        // TODO Should be executed somewhere else
         executePlan(&plan, cncPosition);
+#else
+        executePlan_test(&plan, result, &lastPoint, cncPosition);
 
+#endif
         if (result == planner_success) {
             break;
         }
@@ -50,6 +68,22 @@ void executeLinearMovement(float x, float y, float z, CNCPosition *cncPosition) 
     // TODO Doing this we ignore to discrete movements error. Should be reported maybe? Should not accumulate for sure
     cncPosition->x.pos = x;
     cncPosition->y.pos = y;
+}
+
+void executePlan_test(Plan *plan, enum PlannerResult result, Point *lastPoint, CNCPosition *cncPosition) {
+    Point stepSizes = {
+            .x = cncPosition->x.stepSize,
+            .y = cncPosition->y.stepSize,
+    };
+    Point renderPos = {
+            .x = cncPosition->x.pos,
+            .y = cncPosition->y.pos,
+    };
+    *lastPoint = convertPointFromStepsSize_line(*lastPoint, stepSizes);
+    cncPosition->x.pos = lastPoint->x;
+    cncPosition->y.pos = lastPoint->y;
+
+    addPlanToRender(plan, &renderPos, stepSizes.x);
 }
 
 void executePlan(Plan *plan, CNCPosition *cncPosition) {

@@ -10,6 +10,13 @@ set(CMAKE_CXX_COMPILER gcc)
 
 add_definitions("-g")
 add_definitions("-DLOGGED_BITS")
+add_definitions("-DTEST_BUILD")
+add_definitions("-DTEST_EXECUTOR")
+
+find_package(OpenGL)
+find_package(GLUT)
+
+include_directories( ${OPENGL_INCLUDE_DIRS}  ${GLUT_INCLUDE_DIRS} )
 
 ######################
 # Compiling libraries for PC here
@@ -17,7 +24,8 @@ add_definitions("-DLOGGED_BITS")
 #file(GLOB_RECURSE SRC_C_FILES_FOR_TESTS ${PROJECT_SOURCE_DIR}/src/*.c)
 #file(GLOB_RECURSE SRC_H_FILES_FOR_TESTS ${PROJECT_SOURCE_DIR}/src/*.h)
 add_library(test_bits ../src/bits.c)
-add_library(test_planner_liner ../src/planner/linear.c)
+add_library(test_planner_linear ../src/planner/linear.c)
+add_library(test_planner_arc ../src/planner/arc.c)
 add_library(test_stepper_software_driver ../src/stepper/driver/software_driver.c)
 add_library(test_stepper_hardware_driver ../src/stepper/driver/hardware_driver.c)
 add_library(test_stepper_driver ../src/stepper/stepper.c)
@@ -25,8 +33,7 @@ add_library(test_gcode_driver ../src/gcode/parser.c)
 add_library(test_gcode_executor ../src/gcode/executor.c)
 #add_library(test_src_lib ${SRC_C_FILES_FOR_TESTS} ${SRC_H_FILES_FOR_TESTS})
 
-
-set(LIBS ${LIBS} ${CHECK_LIBRARIES} test_bits test_planner_liner test_stepper_software_driver test_stepper_hardware_driver test_gcode_driver test_gcode_executor test_stepper_driver)
+set(LIBS ${LIBS} ${OPENGL_LIBRARIES} ${GLUT_LIBRARY} ${CHECK_LIBRARIES} test_bits test_planner_linear test_planner_arc test_stepper_software_driver test_stepper_hardware_driver test_gcode_driver test_gcode_executor test_stepper_driver)
 #set(LIBS ${LIBS} ${CHECK_LIBRARIES} test_src_lib)
 
 file(GLOB_RECURSE SRC_TESTS_C_FILES ${PROJECT_SOURCE_DIR}/test/*.c)
