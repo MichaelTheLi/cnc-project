@@ -71,6 +71,11 @@ CNCPosition createTestCNCPosition() {
     return cncPosition;
 }
 
+float generateRandFloat(int size) {
+    float randFloat = rand();
+    return (randFloat / RAND_MAX) * (size * 2) - size;
+}
+
 START_TEST(test_gcode_executor_executes)
     {
         float rawCommand[26] = {};
@@ -100,10 +105,8 @@ START_TEST(test_gcode_executor_tolerances_ok)
         for (int i = 0; i < 10; ++i) {
             float rawCommand[26] = {};
             rawCommand[COMMAND_INDEX('G')] = 1;
-            float x = (float)rand()/(float)(RAND_MAX/50) - 100;
-            float y = (float)rand()/(float)(RAND_MAX/50) - 100;
-            rawCommand[COMMAND_INDEX('X')] = x;
-            rawCommand[COMMAND_INDEX('Y')] = y;
+            rawCommand[COMMAND_INDEX('X')] = generateRandFloat(100);
+            rawCommand[COMMAND_INDEX('Y')] = generateRandFloat(100);
 
             GCodeCommand command = rawCommand;
 
@@ -117,8 +120,8 @@ START_TEST(test_gcode_executor_tolerances_ok)
             // Tolerance is stepSize aka AxisState.perStep
             float x_new = cncPositionPtr->x.pos;
             float y_new = cncPositionPtr->y.pos;
-            ck_assert_float_eq_tol(x_new, x, 0.6f);
-            ck_assert_float_eq_tol(y_new, y, 0.6f);
+            ck_assert_float_eq_tol(x_new, rawCommand[COMMAND_INDEX('X')], 0.6f);
+            ck_assert_float_eq_tol(y_new, rawCommand[COMMAND_INDEX('Y')], 0.6f);
         }
     }
 END_TEST
