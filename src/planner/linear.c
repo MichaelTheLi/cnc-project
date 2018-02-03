@@ -6,10 +6,30 @@
 #include <stdbool.h>
 #include "linear.h"
 
+void convert_coords_to_bresenham_line_2d(Point *from, Point *to, Point stepSizes) {
+    *from = convertPointToStepsSize_line(*from, stepSizes);
+    *to = convertPointToStepsSize_line(*to, stepSizes);
+}
+
+Point convertPointToStepsSize_line(Point point, Point stepSizes) {
+    point.x = floor(point.x / stepSizes.x);
+    point.y = floor(point.y / stepSizes.y);
+
+    return point;
+}
+
+Point convertPointFromStepsSize_line(Point point, Point stepSizes) {
+    point.x = point.x * stepSizes.x;
+    point.y = point.y * stepSizes.y;
+
+    return point;
+}
+
+
 /**
  * Should be sufficient for XY drawing plotter purposes
  */
-enum PlannerResult bresenham_line_2d(Point from, Point to, Plan *output) {
+enum PlannerResult bresenham_line_2d(Point from, Point to, Plan *output, Point *lastPoint) {
     float dx_f = to.x - from.x;
     float dy_f = to.y - from.y;
     enum PlanItemDirection x_dir = dx_f > 0
@@ -27,10 +47,12 @@ enum PlannerResult bresenham_line_2d(Point from, Point to, Plan *output) {
 
     int plan_i = 0;
     for (;;) {
-        bool xSucceed = (to.x - from.x <= 0 && x_dir == plan_item_dir_forward)
-                                 || (from.x - to.x <= 0 && x_dir == plan_item_dir_backward);
-        bool ySucceed = (to.y - from.y <= 0 && y_dir == plan_item_dir_forward)
-                        || (from.y - to.y <= 0 && y_dir == plan_item_dir_backward);
+        to.x = floor(to.x);
+        to.y = floor(to.y);
+        from.x = floor(from.x);
+        from.y = floor(from.y);
+        bool xSucceed = fabs(to.x - from.x) <= 0;
+        bool ySucceed = fabs(to.y - from.y) <= 0;
         if (xSucceed && ySucceed) {
             break;
         }
@@ -52,10 +74,14 @@ enum PlannerResult bresenham_line_2d(Point from, Point to, Plan *output) {
             output->items[plan_i++] = (PlanItem) {
                     .type = y_move,
                     .direction = y_dir
-            };;
+            };
         }
 
         if (plan_i >= PLAN_SIZE) {
+            *lastPoint = (Point) {
+                    .x = from.x,
+                    .y = from.y,
+            };
             return planner_full;
         }
     }

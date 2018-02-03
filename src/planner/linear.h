@@ -5,26 +5,12 @@
 #ifndef CLION_AVR_LINEAR_H
 #define CLION_AVR_LINEAR_H
 
-#define PLAN_SIZE 256 // TODO check if its enough
+#include "planner.h"
 
-typedef struct {
-    float x;
-    float y;
-} Point;
+void convert_coords_to_bresenham_line_2d(Point *from, Point *to, Point stepSizes);
+Point convertPointToStepsSize_line(Point point, Point stepSizes);
+Point convertPointFromStepsSize_line(Point point, Point stepSizes);
 
-enum PlanItemType {none, x_move, y_move};
-enum PlanItemDirection {plan_item_dir_forward, plan_item_dir_backward};
-typedef struct {
-    enum PlanItemType type;
-    enum PlanItemDirection direction;
-} PlanItem;
-
-typedef struct {
-    PlanItem items[PLAN_SIZE];
-} Plan;
-
-enum PlannerResult { planner_full, planner_success, planner_fail};
-
-enum PlannerResult bresenham_line_2d(Point from, Point to, Plan *output);
+enum PlannerResult bresenham_line_2d(Point from, Point to, Plan *output, Point *lastPoint);
 
 #endif //CLION_AVR_LINEAR_H
