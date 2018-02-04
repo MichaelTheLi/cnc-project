@@ -180,6 +180,14 @@ function(add_avr_executable EXECUTABLE_NAME)
       DEPENDS ${elf_file}
    )
 
+
+   # get size
+   add_custom_target(
+        get_size
+        ${AVR_SIZE_TOOL} ${AVR_SIZE_ARGS} ${elf_file}
+        COMMENT "Get size info for ${elf_file}"
+   )
+
    # eeprom
    add_custom_command(
       OUTPUT ${eeprom_image}
