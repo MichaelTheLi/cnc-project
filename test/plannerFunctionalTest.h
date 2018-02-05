@@ -12,6 +12,7 @@
 
 void testLinearInterpolation();
 void testArcInterpolation();
+void testArcCWInterpolation();
 void testRealCommand();
 
 #endif //CLION_AVR_PLANNERFUNCTIONALTEST_H

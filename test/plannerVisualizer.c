@@ -26,7 +26,7 @@ typedef struct {
     float stepSize;
 } RenderPlan;
 
-#define RENDER_PLANS_SIZE 256
+#define RENDER_PLANS_SIZE (1024 * 1024 * 1024)
 int plan_i = 0;
 RenderPlan render_plans[RENDER_PLANS_SIZE];
 
@@ -62,10 +62,15 @@ void renderReal(Point *start, Point *end)
 }
 void renderPlan(Plan *output, Point *pos, float stepSize)
 {
-    glLineWidth(1);
-    glColor3f(1.0, 0.0, 0.0);
+    glLineWidth(1.0);
+    float color1 = 1.0;
+    float color2 = 0.0;
+    float colorStep = 1.0f / PLAN_SIZE;
 
     for (int i = 0; i < PLAN_SIZE; ++i) {
+        glColor3f(color1, color2, 0.0);
+        color1 -= colorStep;
+        color2 += colorStep;
         PlanItem item = output->items[i];
         if (item.type == none) {
             break;

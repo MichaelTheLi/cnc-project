@@ -44,7 +44,7 @@ void makeStepByPtr_hw(StepState_hw_popolu_A4988 *statePtr) {
 
     // make actual step pulsea
     bit_set(*port, BIT(statePtr->step_pin));
-    delay_us(500);
+    delay_us(50);
     bit_clear(*port, BIT(statePtr->step_pin));
     delay_us(500);
 }

@@ -35,8 +35,9 @@ int main (int argc, char *argv[]) {
     srunner_free(runner);
 
     // TODO Functional test should be in separate target
-    testLinearInterpolation();
-    testArcInterpolation();
+//    testLinearInterpolation();
+//    testArcInterpolation();
+//    testArcCCWInterpolation();
 
     testRealCommand();
 

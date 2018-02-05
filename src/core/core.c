@@ -11,11 +11,12 @@ AxisState initializeAxis(StepperState stepState, float stepSize);
 
 CNCPosition* initializeCNCPosition() {
     InnerStepperState state1 = {};
+    unsigned char microsteppingLevel = 4;
     state1.h_state = createStepper_hw(
             FULL_STEP_DOUBLE_PHASE,
-            &PORTB,
-            PB1, // STEP pin
-            PB2, // DIR pin
+            &PORTA,
+            PA1, // STEP pin
+            PA2, // DIR pin
             255, // ms1 pin
             255, // ms2 pin
             255  // ms3 pin
@@ -25,14 +26,14 @@ CNCPosition* initializeCNCPosition() {
                     hardware_polulu,
                     state1
             ),
-            0.15
+            0.15 / microsteppingLevel
     );
     InnerStepperState state2 = {};
     state2.h_state = createStepper_hw(
             FULL_STEP_DOUBLE_PHASE,
-            &PORTB,
-            PB3, // STEP pin
-            PB4, // DIR pin
+            &PORTA,
+            PA3, // STEP pin
+            PA4, // DIR pin
             255, // ms1 pin
             255, // ms2 pin
             255  // ms3 pin
@@ -42,12 +43,30 @@ CNCPosition* initializeCNCPosition() {
                     hardware_polulu,
                     state2
             ),
-            0.15
+            0.15 / microsteppingLevel
+    );
+    InnerStepperState state3 = {};
+    state3.h_state = createStepper_hw(
+            FULL_STEP_DOUBLE_PHASE,
+            &PORTA,
+            PA5, // STEP pin
+            PA6, // DIR pin
+            255, // ms1 pin
+            255, // ms2 pin
+            255  // ms3 pin
+    );
+    AxisState zAxis = initializeAxis(
+            initiateStepper(
+                    hardware_polulu,
+                    state3
+            ),
+            0.15 / microsteppingLevel
     );
 
     CNCPosition cncPosition = {
             .x = xAxis,
             .y = yAxis,
+            .z = zAxis,
             .feedRate = 10.1,
     };
 

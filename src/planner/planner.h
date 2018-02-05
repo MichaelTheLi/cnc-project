@@ -16,7 +16,7 @@ typedef struct {
     float y;
 } Point;
 
-enum PlanItemType {none, x_move, y_move};
+enum PlanItemType {none, x_move, y_move, z_move};
 enum PlanItemDirection {plan_item_dir_forward, plan_item_dir_backward};
 typedef struct {
     enum PlanItemType type;

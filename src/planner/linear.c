@@ -86,5 +86,10 @@ enum PlannerResult bresenham_line_2d(Point from, Point to, Plan *output, Point *
         }
     }
 
+    *lastPoint = (Point) {
+            .x = from.x,
+            .y = from.y,
+    };
+
     return planner_success;
 }

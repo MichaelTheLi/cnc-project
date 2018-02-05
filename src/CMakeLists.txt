@@ -21,7 +21,7 @@ set(AVR_UPLOADTOOL avrdude)
 set(AVR_PROGRAMMER USBasp)
 set(AVR_UPLOADTOOL_PORT usb)
 # AVR and fuses needs to be set
-set(AVR_MCU atmega8)
+set(AVR_MCU atmega32)
 set(AVR_H_FUSE 0xd9)
 set(AVR_L_FUSE 0xc3)
 
@@ -32,8 +32,8 @@ include(../cmake-lists-files/custom-avr.cmake)
 ##################################################################################
 # needs to be defined for AVR toolchain
 ##################################################################################
-set(MCU_SPEED 8000000UL)
-add_definitions("-DF_CPU=8000000UL")
+set(MCU_SPEED 1000000UL)
+add_definitions("-DF_CPU=1000000UL")
 
 ##################################################################################
 # add all sources and headers from ./src
@@ -52,6 +52,7 @@ add_avr_executable(
 
 add_definitions(-DDELAY_ENABLED=1)
 set(CMAKE_VERBOSE_MAKEFILE ON)
+
 #################################################################################
 # add AVR library
 #################################################################################
