@@ -184,6 +184,32 @@ START_TEST (test_parser_comment_string_2_should_be_parsed_correctly_and_returns_
     }
 END_TEST
 
+void checkEOLHelper(char *inputString) {
+    GCodeCommand *commandPtr = createCommand();
+    parseString(inputString, commandPtr);
+
+    GCodeCommand command = *commandPtr;
+
+    ck_assert_float_eq(command[COMMAND_INDEX('G')], 1);
+    command[COMMAND_INDEX('G')] = NAN;
+    ck_assert_float_eq(command[COMMAND_INDEX('X')], 12.0f);
+    command[COMMAND_INDEX('X')] = NAN;
+    ck_assert_float_eq(command[COMMAND_INDEX('Y')], 34.0f);
+    command[COMMAND_INDEX('Y')] = NAN;
+
+    for (int i = 0; i < COMMAND_SIZE; ++i) {
+        ck_assert_float_nan(command[i]);
+    }
+}
+
+START_TEST (test_parser_can_work_with_eol_symbols)
+    {
+        checkEOLHelper("G01 X12 Y34\r\n");
+        checkEOLHelper("G01 X12 Y34\r");
+        checkEOLHelper("G01 X12 Y34\n");
+    }
+END_TEST
+
 void fillSuite_gcode_parser(Suite* suite) {
     TCase *tcase = tcase_create("gcode parser");
 
@@ -199,5 +225,7 @@ void fillSuite_gcode_parser(Suite* suite) {
     tcase_add_test(tcase, test_parser_empty_string_should_be_parsed_correctly_and_returns_status);
     tcase_add_test(tcase, test_parser_comment_string_1_should_be_parsed_correctly_and_returns_status);
     tcase_add_test(tcase, test_parser_comment_string_2_should_be_parsed_correctly_and_returns_status);
+
+    tcase_add_test(tcase, test_parser_can_work_with_eol_symbols);
     suite_add_tcase(suite, tcase);
 }
