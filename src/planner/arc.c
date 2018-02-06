@@ -8,7 +8,7 @@
 #define pow2(X) ((X) * (X))
 #define error(X,Y,R) (fabs(pow2(X) + pow2(Y) - pow2(R)))
 
-void nextStepCCW(Point *pointPtr, float radius, Plan *output, unsigned int *plan_i, enum ArcDirection dir);
+void nextStep(Point *pointPtr, float radius, Plan *output, unsigned int *plan_i, enum ArcDirection dir);
 void nextStepCW(Point *pointPtr, float radius, Plan *output, unsigned int *plan_i, enum ArcDirection dir);
 unsigned char check(Point point, Point to);
 unsigned char complete(Point point, Point to);
