@@ -191,16 +191,16 @@ void executeLinearMovement(float x, float y, float z, CNCPosition *cncPosition) 
 
             result = bresenham_line_2d(from, to, &plan, &lastPoint);
         } else if (dz) {
-            float virtZ = cncPosition->z.pos;
+//            float virtZ = cncPosition->z.pos;
             // TODO Simple movement suitable only for XY-plotter
-            while(virtZ < z) {
-                plan.items[plan_i++] = (PlanItem) {
-                    .type = z_move,
-                    .direction = dzRaw > 0 ? plan_item_dir_forward : plan_item_dir_backward
-                };
-                int modifier = dzRaw > 0 ? 1 : -1;
-                virtZ += modifier * cncPosition->z.stepSize;
-            }
+//            while(virtZ < z) {
+//                plan.items[plan_i++] = (PlanItem) {
+//                    .type = z_move,
+//                    .direction = dzRaw > 0 ? plan_item_dir_forward : plan_item_dir_backward
+//                };
+//                int modifier = dzRaw > 0 ? 1 : -1;
+//                virtZ += modifier * cncPosition->z.stepSize;
+//            }
             result = planner_success;
         }
 
