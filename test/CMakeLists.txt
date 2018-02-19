@@ -18,6 +18,7 @@ find_package(OpenGL)
 find_package(GLUT)
 
 include_directories( ${OPENGL_INCLUDE_DIRS}  ${GLUT_INCLUDE_DIRS} )
+include_directories(./stubs)
 
 ######################
 # Compiling libraries for PC here
@@ -34,9 +35,10 @@ add_library(test_pwm_calculator ../src/servo/pwm_calculator.c)
 add_library(test_servo_driver ../src/servo/driver.c)
 add_library(test_gcode_driver ../src/gcode/parser.c)
 add_library(test_gcode_executor ../src/gcode/executor.c)
+add_library(test_serial_uart ../src/serial/uart.c)
 #add_library(test_src_lib ${SRC_C_FILES_FOR_TESTS} ${SRC_H_FILES_FOR_TESTS})
 
-set(COMPILED_FOR_PC test_pwm_calculator test_bits test_planner_linear test_planner_arc test_stepper_software_driver test_stepper_hardware_driver test_servo_driver test_gcode_driver test_gcode_executor test_stepper_driver)
+set(COMPILED_FOR_PC test_serial_uart test_pwm_calculator test_bits test_planner_linear test_planner_arc test_stepper_software_driver test_stepper_hardware_driver test_servo_driver test_gcode_driver test_gcode_executor test_stepper_driver)
 
 set(LIBS ${LIBS} ${OPENGL_LIBRARIES} ${GLUT_LIBRARY} ${CHECK_LIBRARIES} ${COMPILED_FOR_PC})
 #set(LIBS ${LIBS} ${CHECK_LIBRARIES} test_src_lib)

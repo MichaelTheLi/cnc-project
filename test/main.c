@@ -15,6 +15,7 @@
 
 #include "plannerVisualizer.h"
 #include "plannerFunctionalTest.h"
+#include "serial/uart_test.h"
 
 Suite* str_suite (void) {
     Suite *suite = suite_create("Main suite");
@@ -26,6 +27,8 @@ Suite* str_suite (void) {
 
     fillSuite_pwm_calculator(suite);
     fillSuite_servo_driver(suite);
+
+    fillSuite_uart_core(suite);
 
     return suite;
 }
