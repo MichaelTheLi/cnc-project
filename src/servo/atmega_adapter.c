@@ -6,7 +6,6 @@
 #include "./driver.h"
 #include "./pwm_calculator.h"
 
-#define TOP_FOR_FREQ(FREQ,PRESCALER) (((F_CPU) / (FREQ * PRESCALER)) - 1)
 #define PRESCALER 64
 
 void initializeATMegaHardwarePWM(ServoInnerState innerState) {
