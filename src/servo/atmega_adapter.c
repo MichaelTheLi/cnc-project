@@ -14,6 +14,8 @@ void initializeATMegaHardwarePWM(ServoInnerState innerState) {
 
     // 311 for fPWM=50Hz (Period = 20ms Standard)
     ICR1 = (int) TOP_FOR_FREQ(50, PRESCALER);
+
+    DDRD |= (1 << PD5);   // PWM Pins as Out
 }
 
 void turn(ServoInnerState innerState) {

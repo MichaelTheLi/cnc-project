@@ -7,8 +7,9 @@
 #define TEST_EXECUTOR
 
 #include "./stepper/software_driver.h"
-#include "stepper/hardware_driver_test.h"
-#include "servo/pwm_calculator_test.h"
+#include "./stepper/hardware_driver_test.h"
+#include "./servo/pwm_calculator_test.h"
+#include "./servo/driver_test.h"
 #include "./gcode/parser.h"
 #include "./gcode/executorTest.h"
 
@@ -24,6 +25,7 @@ Suite* str_suite (void) {
     fillSuite_gcode_executor(suite);
 
     fillSuite_pwm_calculator(suite);
+    fillSuite_servo_driver(suite);
 
     return suite;
 }
