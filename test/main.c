@@ -4,18 +4,13 @@
 
 #include <check.h>
 
-#define TEST_EXECUTOR
-
 #include "./stepper/software_driver.h"
 #include "./stepper/hardware_driver_test.h"
 #include "./servo/pwm_calculator_test.h"
 #include "./servo/driver_test.h"
 #include "./gcode/parser.h"
 #include "./gcode/executorTest.h"
-
-#include "plannerVisualizer.h"
-#include "plannerFunctionalTest.h"
-#include "serial/uart_test.h"
+#include "./serial/uart_test.h"
 
 Suite* str_suite (void) {
     Suite *suite = suite_create("Main suite");
@@ -41,15 +36,6 @@ int main (int argc, char *argv[]) {
     srunner_run_all(runner, CK_NORMAL);
     number_failed = srunner_ntests_failed(runner);
     srunner_free(runner);
-
-    // TODO Functional test should be in separate target
-//    testLinearInterpolation();
-//    testArcInterpolation();
-//    testArcCCWInterpolation();
-
-//    testRealCommand();
-
-//    startPlannerVisualization();
 
     return number_failed;
 }

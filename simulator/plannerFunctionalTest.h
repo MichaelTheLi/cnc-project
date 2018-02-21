@@ -7,8 +7,8 @@
 
 #include "plannerVisualizer.h"
 
-#include <planner/linear.h>
-#include <planner/arc.h>
+#include "planner/linear.h"
+#include "planner/arc.h"
 
 void testLinearInterpolation();
 void testArcInterpolation();

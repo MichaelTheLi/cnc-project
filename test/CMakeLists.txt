@@ -2,7 +2,6 @@ enable_testing()
 find_package(Check REQUIRED)
 include_directories(${CHECK_INCLUDE_DIRS})
 #include_directories("/usr/local/Cellar/avr-gcc/7.2.0/avr/include")
-
 #include_directories("/usr/local/Cellar/simavr/HEAD-6660aba/include/simavr")
 
 set(CMAKE_C_COMPILER gcc)
@@ -11,13 +10,8 @@ set(CMAKE_CXX_COMPILER gcc)
 add_definitions("-g")
 add_definitions("-DLOGGED_BITS")
 add_definitions("-DTEST_BUILD")
-add_definitions("-DTEST_EXECUTOR")
 add_definitions("-DF_CPU=1000000")
 
-find_package(OpenGL)
-find_package(GLUT)
-
-include_directories( ${OPENGL_INCLUDE_DIRS}  ${GLUT_INCLUDE_DIRS} )
 include_directories(./stubs)
 
 ######################
@@ -40,7 +34,7 @@ add_library(test_serial_uart ../src/serial/uart.c)
 
 set(COMPILED_FOR_PC test_serial_uart test_pwm_calculator test_bits test_planner_linear test_planner_arc test_stepper_software_driver test_stepper_hardware_driver test_servo_driver test_gcode_driver test_gcode_executor test_stepper_driver)
 
-set(LIBS ${LIBS} ${OPENGL_LIBRARIES} ${GLUT_LIBRARY} ${CHECK_LIBRARIES} ${COMPILED_FOR_PC})
+set(LIBS ${LIBS} ${CHECK_LIBRARIES} ${COMPILED_FOR_PC})
 #set(LIBS ${LIBS} ${CHECK_LIBRARIES} test_src_lib)
 
 file(GLOB_RECURSE SRC_TESTS_C_FILES ${PROJECT_SOURCE_DIR}/test/*.c)

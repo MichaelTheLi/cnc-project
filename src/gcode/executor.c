@@ -9,7 +9,7 @@
 #include "../core/core.h"
 
 #ifdef TEST_EXECUTOR
-    #include "../../test/plannerVisualizer.h"
+    #include "../../simulator/plannerVisualizer.h"
 #endif
 
 void executeLinearMovement(float x, float y, float z, CNCPosition *cncPosition);
@@ -231,6 +231,7 @@ void executeLinearMovement(float x, float y, float z, CNCPosition *cncPosition) 
 
 
 void executePlan_test(Plan *plan, enum PlannerResult result, Point lastPoint, CNCPosition *cncPosition) {
+#ifdef TEST_EXECUTOR
     Point stepSizes = {
             .x = cncPosition->x.stepSize,
             .y = cncPosition->y.stepSize,
@@ -248,6 +249,7 @@ void executePlan_test(Plan *plan, enum PlannerResult result, Point lastPoint, CN
     }
 
     addPlanToRender(plan, &renderPos, stepSizes.x);
+#endif
 }
 
 void executePlan(Plan *plan, CNCPosition *cncPosition) {
