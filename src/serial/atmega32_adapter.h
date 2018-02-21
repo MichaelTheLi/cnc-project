@@ -7,7 +7,7 @@
 
 #include <stdbool.h>
 
-typedef void (*receivedCharFunc)(unsigned int receivedChar);
+typedef void (*receivedCharFunc)(char receivedChar);
 
 void initialize(unsigned char prescale, receivedCharFunc receivedChar_callback);
 bool isReady();

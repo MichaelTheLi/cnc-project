@@ -35,9 +35,9 @@ ISR (USART_RXC_vect)
 {
     // Get data from the USART in register
     uint8_t receivedChar = UDR;
-    receivedCharCallback(receivedChar);
+    receivedCharCallback((char) receivedChar);
 }
 
 void sendChar(char toSend) {
-    UDR = toSend;
+    UDR = (uint8_t) toSend;
 }

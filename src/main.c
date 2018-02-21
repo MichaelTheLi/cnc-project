@@ -69,6 +69,7 @@ int main(void)
     cncPositionPtr = initializeCNCPosition();
 
     serial_initialize(&copy_command, &isReady, &sendChar);
+    initialize(64, &serial_onReceivedChar);
 
     delay_ms(100);
 
