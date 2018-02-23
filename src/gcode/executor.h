@@ -8,7 +8,13 @@
 #include "./parser.h"
 #include "../core/core.h"
 
-typedef enum { gcode_execute_success, gcode_execute_common_error } GCodeExecuteResult;
+typedef enum {
+    gcode_execute_success,
+    gcode_execute_common_error,
+    gcode_g0_not_enough_params,
+    gcode_g1_not_enough_params,
+    gcode_g2_g3_no_radius,
+} GCodeExecuteResult;
 
 GCodeExecuteResult executeCommand(GCodeCommand *gCodeCommand, CNCPosition *cncPosition);
 

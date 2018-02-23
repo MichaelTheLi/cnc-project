@@ -51,7 +51,7 @@ void process_command()
 
         if (executeResult == gcode_execute_success) {
             serial_put_string("- Executed\r\n");
-        } else if(executeResult == gcode_execute_common_error){
+        } else {
             serial_put_string("-- Execute error\r\n");
         }
     }

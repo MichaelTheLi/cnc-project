@@ -35,7 +35,7 @@ Point convertPointFromStepsSize(Point point, Point center, Point stepSizes) {
 }
 
 Point findCenter(Point one, Point two, float radius) {
-    float q = sqrt(pow2(two.x-one.x) + pow2(two.y - one.y));
+    double q = sqrt(pow2(two.x-one.x) + pow2(two.y - one.y));
 
     double y3 = (one.y+two.y)/2;
     double x3 = (one.x+two.x)/2;
@@ -46,7 +46,7 @@ Point findCenter(Point one, Point two, float radius) {
     if (radius > 0) {
         return (Point) {
           .x = x3 + basex,
-          .y =  y3 + basey,
+          .y = y3 + basey,
         };
     }
 
@@ -57,10 +57,11 @@ Point findCenter(Point one, Point two, float radius) {
 }
 
 float findAndCheckRadius(Point one, Point two, Point center, float tolerance) {
-    float first = sqrt(pow2(center.x-one.x) + pow2(center.y - one.y));
-    float second = sqrt(pow2(center.x-two.x) + pow2(center.y - two.y));
+    double first = sqrt(pow2(center.x - one.x) + pow2(center.y - one.y));
+    double second = sqrt(pow2(center.x - two.x) + pow2(center.y - two.y));
 
-    if (fabs(first - second) >= tolerance) {
+    float diff = fabs(first - second);
+    if (diff >= tolerance * 100 / diff) {
         return NAN;
     }
 
@@ -222,12 +223,18 @@ void nextStep(Point *pointPtr, float radius, Plan *output, unsigned int *plan_i,
 
 unsigned char complete(Point point, Point to) {
     if(check(point, to)) {
+        float tolerance = 0;
+
+        if ((fabs(point.y) - fabs(to.y)) + (fabs(point.x) - fabs(to.x)) < 4) {
+            tolerance = 2;
+        }
+
         if(fabs(point.x) > fabs(point.y)) {
-            if(point.y == to.y) {
+            if(fabs(point.y - to.y) <= tolerance) {
                 return 1;
             }
         } else {
-            if(point.x == to.x) {
+            if(fabs(point.x - to.x) <= tolerance) {
                 return 1;
             }
         }
@@ -237,9 +244,11 @@ unsigned char complete(Point point, Point to) {
 }
 
 unsigned char check(Point point, Point to) {
-    if((point.x>0 && to.x>0)||(point.x<0 && to.x<0)||(point.x==0 && to.x==0)) {
-        if((point.y>0&&to.y>0)||(point.y<0&&to.y<0)||(point.y==0 && to.y==0)) {
-            if(((fabs(point.x)>fabs(point.y))&&(fabs(to.x)>fabs(to.y)))|| ((fabs(point.x)<fabs(point.y))&&(fabs(to.x)<fabs(to.y)))) {
+    if((point.x > 0 && to.x > 0) || (point.x < 0 && to.x < 0) || (point.x == 0 && to.x == 0)) {
+        if ((point.y > 0 && to.y > 0) || (point.y < 0 && to.y < 0) || (point.y == 0 && to.y == 0)) {
+            if (((fabs(point.x) >= fabs(point.y)) && (fabs(to.x) >= fabs(to.y)))
+                || ((fabs(point.x) < fabs(point.y)) && (fabs(to.x) < fabs(to.y)))
+            ) {
                 return 1;
             }
         }

@@ -8,7 +8,7 @@
 #include <planner/linear.h>
 
 void addRealLine(Point *start, Point *end);
-void addPlanToRender(Plan *output, Point *pos, float render_step_size);
+void addPlanToRender(Plan *output, Point *pos, float render_step_size, char renderType);
 int startPlannerVisualization();
 
 #endif //CLION_AVR_PLANNERVISUALIZER_H

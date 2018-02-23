@@ -4,13 +4,19 @@
 
 #include "plannerVisualizer.h"
 #include "plannerFunctionalTest.h"
+#include "testCommands.h"
+#include "testCommandYoda.h"
+#include "testCommandsFull.h"
 
 int main (int argc, char *argv[]) {
 //    testLinearInterpolation();
 //    testArcInterpolation();
 //    testArcCCWInterpolation();
 
-    testRealCommand();
+    char **commands = fishFull;
+    int size = sizeof(fishFull) / sizeof(commands[0]);
+
+    testRealCommand(size, commands);
 
     startPlannerVisualization();
 }

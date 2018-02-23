@@ -12,10 +12,12 @@
     #include "../../simulator/plannerVisualizer.h"
 #endif
 
+void executeFastLinearMovement(float x, float y, float z, CNCPosition *cncPosition);
 void executeLinearMovement(float x, float y, float z, CNCPosition *cncPosition);
-void executeArcMovement(float x, float y, float z, enum ArcDirection dir, CNCPosition *cncPosition);
+void executeArcMovementWithCenter(float x, float y, float radius, Point center, enum ArcDirection dir, CNCPosition *cncPosition);
+void executeArcMovement(float x, float y, float radius, enum ArcDirection dir, CNCPosition *cncPosition);
 void executePlan(Plan *plan, CNCPosition *cncPosition);
-void executePlan_test(Plan *plan, enum PlannerResult result, Point lastPoint, CNCPosition *cncPosition);
+void executePlan_test(Plan *plan, enum PlannerResult result, Point lastPoint, CNCPosition *cncPosition, char render);
 
 GCodeExecuteResult executeCommand(GCodeCommand *gCodeCommand, CNCPosition *cncPosition) {
     GCodeCommand command = *gCodeCommand;
@@ -29,9 +31,15 @@ GCodeExecuteResult executeCommand(GCodeCommand *gCodeCommand, CNCPosition *cncPo
 
     switch ((int)command[COMMAND_INDEX('G')]) {
         case 0:
+            if (isnan(x) && isnan(y) && isnan(z)) {
+                return gcode_g0_not_enough_params;
+            }
+
+            executeFastLinearMovement(x, y, z, cncPosition);
+            break;
         case 1:
             if (isnan(x) && isnan(y) && isnan(z)) {
-                return gcode_execute_common_error;
+                return gcode_g1_not_enough_params;
             }
 
             executeLinearMovement(x, y, z, cncPosition);
@@ -55,15 +63,14 @@ GCodeExecuteResult executeCommand(GCodeCommand *gCodeCommand, CNCPosition *cncPo
                 };
 
                 foundRadius = findAndCheckRadius(from, to, center, cncPosition->x.stepSize);
+                if (isnan(foundRadius)) {
+                    return gcode_g2_g3_no_radius;
+                }
+                executeArcMovementWithCenter(x, y, -foundRadius, center, ARC_CW, cncPosition);
             } else {
                 foundRadius = radius;
+                executeArcMovement(x, y, -foundRadius, ARC_CW, cncPosition);
             }
-
-            if (isnan(foundRadius)){
-                return gcode_execute_common_error;
-            }
-
-            executeArcMovement(x, y, foundRadius, ARC_CW, cncPosition);
             break;
         case 3:
             if (isnan(radius)) {
@@ -84,15 +91,14 @@ GCodeExecuteResult executeCommand(GCodeCommand *gCodeCommand, CNCPosition *cncPo
                 };
 
                 foundRadius = findAndCheckRadius(from, to, center, cncPosition->x.stepSize);
+                if (isnan(foundRadius)) {
+                    return gcode_g2_g3_no_radius;
+                }
+                executeArcMovementWithCenter(x, y, foundRadius, center, ARC_CCW, cncPosition);
             } else {
                 foundRadius = radius;
+                executeArcMovement(x, y, foundRadius, ARC_CCW, cncPosition);
             }
-
-            if (isnan(foundRadius)){
-                return gcode_execute_common_error;
-            }
-
-            executeArcMovement(x, y, foundRadius, ARC_CCW, cncPosition);
             break;
         default:
             break;
@@ -123,13 +129,40 @@ void executeActualArc(Point from, Point to, float radius, Point center, Point st
 //        realLastPoint.y = lastPoint.x;
 
         Point lastPointForRender = convertPointFromStepsSize(realLastPoint, center, stepSizes);
-        executePlan_test(&plan, result, lastPointForRender, cncPosition);
+        executePlan_test(&plan, result, lastPointForRender, cncPosition, (dir == ARC_CW) ? 2 : 3);
 
 #endif
         if (result == planner_full) {
             from = lastPoint;
         }
     } while(result != planner_success && result != planner_fail);
+}
+
+void executeArcMovementWithCenter(float x, float y, float radius, Point center, enum ArcDirection dir, CNCPosition *cncPosition) {
+    Point from = {
+            .x = cncPosition->x.pos,
+            .y = cncPosition->y.pos
+    };
+    Point to = {
+            .x = x,
+            .y = y
+    };
+
+    Point stepSizes = {
+            .x = cncPosition->x.stepSize,
+            .y = cncPosition->y.stepSize,
+    };
+
+    convert_coords_to_bresenham_arc_2d(&from, &to, &radius, center, stepSizes);
+    executeActualArc(from, to, radius, center, stepSizes, dir, cncPosition);
+
+    // TODO Doing this we ignore to discrete movements error. Should be reported maybe? Should not accumulate for sure
+    if (!isnan(x)) {
+        cncPosition->x.pos = x;
+    }
+    if (!isnan(y)) {
+        cncPosition->y.pos = y;
+    }
 }
 
 void executeArcMovement(float x, float y, float radius, enum ArcDirection dir, CNCPosition *cncPosition) {
@@ -158,6 +191,77 @@ void executeArcMovement(float x, float y, float radius, enum ArcDirection dir, C
     }
     if (!isnan(y)) {
         cncPosition->y.pos = y;
+    }
+}
+
+void executeFastLinearMovement(float x, float y, float z, CNCPosition *cncPosition) {
+    do {
+        Point from = {
+                .x = cncPosition->x.pos,
+                .y = cncPosition->y.pos
+        };
+        Point to = {
+                .x = x,
+                .y = y
+        };
+        Point stepSizes = {
+                .x = cncPosition->x.stepSize,
+                .y = cncPosition->y.stepSize,
+        };
+
+        float dx = fabs(to.x - from.x);
+        float dy = fabs(to.y - from.y);
+        float dzRaw = z - cncPosition->z.pos;
+        float dz = fabs(z - cncPosition->z.pos);
+
+        int plan_i = 0;
+        Plan plan = {};
+        Point lastPoint = to;
+        enum PlannerResult result = planner_fail;
+
+        if ((dx || dy) && !isnan(dx) && !isnan(dy)) {
+            convert_coords_to_bresenham_line_2d(&from, &to, stepSizes);
+
+            result = bresenham_line_2d(from, to, &plan, &lastPoint);
+        } else{
+            if (dz) {
+//            float virtZ = cncPosition->z.pos;
+                // TODO Simple movement suitable only for XY-plotter
+//            while(virtZ < z) {
+//                plan.items[plan_i++] = (PlanItem) {
+//                    .type = z_move,
+//                    .direction = dzRaw > 0 ? plan_item_dir_forward : plan_item_dir_backward
+//                };
+//                int modifier = dzRaw > 0 ? 1 : -1;
+//                virtZ += modifier * cncPosition->z.stepSize;
+//            }
+            }
+
+            result = planner_success;
+        }
+
+#ifndef TEST_EXECUTOR
+        // TODO Should be executed somewhere else
+        executePlan(&plan, cncPosition);
+#else
+        Point lastPointForRender = convertPointFromStepsSize_line(lastPoint, stepSizes);
+        executePlan_test(&plan, result, lastPointForRender, cncPosition, 0);
+
+#endif
+        if (result == planner_success) {
+            break;
+        }
+    } while(1);
+
+    // TODO Doing this we ignore to discrete movements error. Should be reported maybe? Should not accumulate for sure
+    if (!isnan(x)) {
+        cncPosition->x.pos = x;
+    }
+    if (!isnan(y)) {
+        cncPosition->y.pos = y;
+    }
+    if (!isnan(z)) {
+        cncPosition->z.pos = z;
     }
 }
 
@@ -190,9 +294,10 @@ void executeLinearMovement(float x, float y, float z, CNCPosition *cncPosition) 
             convert_coords_to_bresenham_line_2d(&from, &to, stepSizes);
 
             result = bresenham_line_2d(from, to, &plan, &lastPoint);
-        } else if (dz) {
+        } else{
+            if (dz) {
 //            float virtZ = cncPosition->z.pos;
-            // TODO Simple movement suitable only for XY-plotter
+                // TODO Simple movement suitable only for XY-plotter
 //            while(virtZ < z) {
 //                plan.items[plan_i++] = (PlanItem) {
 //                    .type = z_move,
@@ -201,6 +306,8 @@ void executeLinearMovement(float x, float y, float z, CNCPosition *cncPosition) 
 //                int modifier = dzRaw > 0 ? 1 : -1;
 //                virtZ += modifier * cncPosition->z.stepSize;
 //            }
+            }
+
             result = planner_success;
         }
 
@@ -209,7 +316,7 @@ void executeLinearMovement(float x, float y, float z, CNCPosition *cncPosition) 
         executePlan(&plan, cncPosition);
 #else
         Point lastPointForRender = convertPointFromStepsSize_line(lastPoint, stepSizes);
-        executePlan_test(&plan, result, lastPointForRender, cncPosition);
+        executePlan_test(&plan, result, lastPointForRender, cncPosition, 1);
 
 #endif
         if (result == planner_success) {
@@ -230,7 +337,7 @@ void executeLinearMovement(float x, float y, float z, CNCPosition *cncPosition) 
 }
 
 
-void executePlan_test(Plan *plan, enum PlannerResult result, Point lastPoint, CNCPosition *cncPosition) {
+void executePlan_test(Plan *plan, enum PlannerResult result, Point lastPoint, CNCPosition *cncPosition, char renderType) {
 #ifdef TEST_EXECUTOR
     Point stepSizes = {
             .x = cncPosition->x.stepSize,
@@ -248,7 +355,9 @@ void executePlan_test(Plan *plan, enum PlannerResult result, Point lastPoint, CN
         cncPosition->y.pos = lastPoint.y;
     }
 
-    addPlanToRender(plan, &renderPos, stepSizes.x);
+    if (renderType != 0) {
+        addPlanToRender(plan, &renderPos, stepSizes.x, renderType);
+    }
 #endif
 }
 
