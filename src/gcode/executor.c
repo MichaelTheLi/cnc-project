@@ -14,8 +14,7 @@
 
 void executeFastLinearMovement(float x, float y, float z, CNCPosition *cncPosition);
 void executeLinearMovement(float x, float y, float z, CNCPosition *cncPosition);
-void executeArcMovementWithCenter(float x, float y, float radius, Point center, enum ArcDirection dir, CNCPosition *cncPosition);
-void executeArcMovement(float x, float y, float radius, enum ArcDirection dir, CNCPosition *cncPosition);
+void executeArcMovement(float x, float y, float radius, Point center, enum ArcDirection dir, CNCPosition *cncPosition);
 void executePlan(Plan *plan, CNCPosition *cncPosition);
 void executePlan_test(Plan *plan, enum PlannerResult result, Point lastPoint, CNCPosition *cncPosition, char render);
 
@@ -25,81 +24,63 @@ GCodeExecuteResult executeCommand(GCodeCommand *gCodeCommand, CNCPosition *cncPo
     float x = command[COMMAND_INDEX('X')];
     float y = command[COMMAND_INDEX('Y')];
     float z = command[COMMAND_INDEX('Z')];
-    float radius = command[COMMAND_INDEX('R')];
 
-    float foundRadius;
-
-    switch ((int)command[COMMAND_INDEX('G')]) {
+    int commandInt = (int) command[COMMAND_INDEX('G')];
+    switch (commandInt) {
         case 0:
+        case 1:
             if (isnan(x) && isnan(y) && isnan(z)) {
                 return gcode_g0_not_enough_params;
             }
 
-            executeFastLinearMovement(x, y, z, cncPosition);
-            break;
-        case 1:
-            if (isnan(x) && isnan(y) && isnan(z)) {
-                return gcode_g1_not_enough_params;
+            if (commandInt == 0) {
+                executeFastLinearMovement(x, y, z, cncPosition);
+            } else {
+                executeLinearMovement(x, y, z, cncPosition);
             }
-
-            executeLinearMovement(x, y, z, cncPosition);
             break;
         case 2:
+        case 3: {
+            float radius = command[COMMAND_INDEX('R')];
+            Point from = {
+                .x = cncPosition->x.pos,
+                .y = cncPosition->y.pos
+            };
+            Point to = {
+                .x = x,
+                .y = y
+            };
+            enum ArcDirection dir = commandInt == 2
+                ? ARC_CW
+                : ARC_CCW;
+
+            Point center;
+
             if (isnan(radius)) {
                 float centerX = command[COMMAND_INDEX('I')];
                 float centerY = command[COMMAND_INDEX('J')];
 
-                Point from = {
-                        .x = cncPosition->x.pos,
-                        .y = cncPosition->y.pos
-                };
-                Point to = {
-                        .x = x,
-                        .y = y
-                };
-                Point center = {
-                        .x = cncPosition->x.pos + centerX,
-                        .y = cncPosition->y.pos + centerY
+                center = (Point) {
+                    .x = cncPosition->x.pos + centerX,
+                    .y = cncPosition->y.pos + centerY
                 };
 
-                foundRadius = findAndCheckRadius(from, to, center, cncPosition->x.stepSize);
-                if (isnan(foundRadius)) {
-                    return gcode_g2_g3_no_radius;
-                }
-                executeArcMovementWithCenter(x, y, -foundRadius, center, ARC_CW, cncPosition);
+                radius = findAndCheckRadius(from, to, center, cncPosition->x.stepSize);
             } else {
-                foundRadius = radius;
-                executeArcMovement(x, y, -foundRadius, ARC_CW, cncPosition);
+                center = findCenter(from, to, radius);
             }
-            break;
-        case 3:
+
             if (isnan(radius)) {
-                float centerX = command[COMMAND_INDEX('I')];
-                float centerY = command[COMMAND_INDEX('J')];
-
-                Point from = {
-                        .x = cncPosition->x.pos,
-                        .y = cncPosition->y.pos
-                };
-                Point to = {
-                        .x = x,
-                        .y = y
-                };
-                Point center = {
-                        .x = cncPosition->x.pos + centerX,
-                        .y = cncPosition->y.pos + centerY
-                };
-
-                foundRadius = findAndCheckRadius(from, to, center, cncPosition->x.stepSize);
-                if (isnan(foundRadius)) {
-                    return gcode_g2_g3_no_radius;
-                }
-                executeArcMovementWithCenter(x, y, foundRadius, center, ARC_CCW, cncPosition);
-            } else {
-                foundRadius = radius;
-                executeArcMovement(x, y, foundRadius, ARC_CCW, cncPosition);
+                return gcode_g2_g3_no_radius;
             }
+
+            if (commandInt == 2) {
+                radius *= -1;
+            }
+
+            executeArcMovement(x, y, radius, center, dir, cncPosition);
             break;
+        }
         default:
             break;
     }
@@ -107,8 +88,6 @@ GCodeExecuteResult executeCommand(GCodeCommand *gCodeCommand, CNCPosition *cncPo
     return gcode_execute_success;
 }
 
-#define sign(x) (x >= 0) ? 1 : -1
-#define sign_f(x) ((float)(sign(x)))
 void executeActualArc(Point from, Point to, float radius, Point center, Point stepSizes, enum ArcDirection dir, CNCPosition *cncPosition) {
     enum PlannerResult result;
     Point lastPoint = from;
@@ -120,17 +99,8 @@ void executeActualArc(Point from, Point to, float radius, Point center, Point st
         // TODO Should be executed somewhere else
         executePlan(&plan, cncPosition);
 #else
-        Point realLastPoint = lastPoint;
-//        realLastPoint.x = sign_f(lastPoint.x) * fabs(lastPoint.y);
-//        realLastPoint.y = sign_f(lastPoint.y) * fabs(lastPoint.x);
-//        float dx = lastPoint.x - to.x;
-//        float dy = lastPoint.y - to.y;
-//        realLastPoint.x = lastPoint.y;
-//        realLastPoint.y = lastPoint.x;
-
-        Point lastPointForRender = convertPointFromStepsSize(realLastPoint, center, stepSizes);
+        Point lastPointForRender = convertPointFromStepsSize(lastPoint, center, stepSizes);
         executePlan_test(&plan, result, lastPointForRender, cncPosition, (dir == ARC_CW) ? 2 : 3);
-
 #endif
         if (result == planner_full) {
             from = lastPoint;
@@ -138,7 +108,7 @@ void executeActualArc(Point from, Point to, float radius, Point center, Point st
     } while(result != planner_success && result != planner_fail);
 }
 
-void executeArcMovementWithCenter(float x, float y, float radius, Point center, enum ArcDirection dir, CNCPosition *cncPosition) {
+void executeArcMovement(float x, float y, float radius, Point center, enum ArcDirection dir, CNCPosition *cncPosition) {
     Point from = {
             .x = cncPosition->x.pos,
             .y = cncPosition->y.pos
@@ -152,35 +122,6 @@ void executeArcMovementWithCenter(float x, float y, float radius, Point center, 
             .x = cncPosition->x.stepSize,
             .y = cncPosition->y.stepSize,
     };
-
-    convert_coords_to_bresenham_arc_2d(&from, &to, &radius, center, stepSizes);
-    executeActualArc(from, to, radius, center, stepSizes, dir, cncPosition);
-
-    // TODO Doing this we ignore to discrete movements error. Should be reported maybe? Should not accumulate for sure
-    if (!isnan(x)) {
-        cncPosition->x.pos = x;
-    }
-    if (!isnan(y)) {
-        cncPosition->y.pos = y;
-    }
-}
-
-void executeArcMovement(float x, float y, float radius, enum ArcDirection dir, CNCPosition *cncPosition) {
-    Point from = {
-            .x = cncPosition->x.pos,
-            .y = cncPosition->y.pos
-    };
-    Point to = {
-            .x = x,
-            .y = y
-    };
-
-    Point stepSizes = {
-            .x = cncPosition->x.stepSize,
-            .y = cncPosition->y.stepSize,
-    };
-
-    Point center = findCenter(from, to, radius);
 
     convert_coords_to_bresenham_arc_2d(&from, &to, &radius, center, stepSizes);
     executeActualArc(from, to, radius, center, stepSizes, dir, cncPosition);
@@ -317,7 +258,6 @@ void executeLinearMovement(float x, float y, float z, CNCPosition *cncPosition) 
 #else
         Point lastPointForRender = convertPointFromStepsSize_line(lastPoint, stepSizes);
         executePlan_test(&plan, result, lastPointForRender, cncPosition, 1);
-
 #endif
         if (result == planner_success) {
             break;

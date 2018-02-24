@@ -126,11 +126,41 @@ START_TEST(test_gcode_executor_tolerances_ok)
     }
 END_TEST
 
+START_TEST(test_gcode_executor_z_axis)
+    {
+        for (int i = 0; i < 10; ++i) {
+            float rawCommand[26] = {};
+            rawCommand[COMMAND_INDEX('G')] = 1;
+            rawCommand[COMMAND_INDEX('X')] = generateRandFloat(100);
+            rawCommand[COMMAND_INDEX('Y')] = generateRandFloat(100);
+            rawCommand[COMMAND_INDEX('Z')] = generateRandFloat(100);
+
+            GCodeCommand command = rawCommand;
+
+            CNCPosition cncPosition = createTestCNCPosition();
+            CNCPosition *cncPositionPtr = &cncPosition;
+
+            GCodeExecuteResult result = executeCommand(&command, cncPositionPtr);
+
+            ck_assert_msg(result == gcode_execute_success, "Didn't executed successfully");
+
+            // Tolerance is stepSize aka AxisState.perStep
+            float x_new = cncPositionPtr->x.pos;
+            float y_new = cncPositionPtr->y.pos;
+            float z_new = cncPositionPtr->z.pos;
+            ck_assert_float_eq_tol(x_new, rawCommand[COMMAND_INDEX('X')], 0.6f);
+            ck_assert_float_eq_tol(y_new, rawCommand[COMMAND_INDEX('Y')], 0.6f);
+            ck_assert_float_eq_tol(z_new, rawCommand[COMMAND_INDEX('Z')], 0.6f);
+        }
+    }
+END_TEST
+
 void fillSuite_gcode_executor(Suite* suite) {
     TCase *tcase = tcase_create("gcode executor");
 
     tcase_add_test(tcase, test_gcode_executor_executes);
     tcase_add_test(tcase, test_gcode_executor_tolerances_ok);
+    tcase_add_test(tcase, test_gcode_executor_z_axis);
     tcase_set_timeout(tcase, 10);
 
     suite_add_tcase(suite, tcase);
